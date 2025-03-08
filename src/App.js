@@ -1,5 +1,5 @@
 import React from 'react';
-import RetroRadioWaveSimulator from './RetroRadioWaveSimulator';
+import RetroRadioWaveSimulator from './components/RetroRadioWaveSimulator';
 import './App.css';
 
 function App() {
