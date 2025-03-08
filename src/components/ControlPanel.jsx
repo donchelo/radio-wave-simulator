@@ -1,6 +1,6 @@
 import React from 'react';
-import VintageKnob from './controls/VintageKnob';
-import ToggleKnob from './controls/ToggleKnob';
+import VintageKnob from '../components/controls/VintageKnob';
+import ToggleKnob from '../components/controls/VintageKnob';
 
 const ControlPanel = ({ waveParams, setters }) => {
   const { 

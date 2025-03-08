@@ -1,48 +1,61 @@
+/* Estilos generales para el simulador de radio retro */
 .radio-container {
   width: 100%;
-  max-width: 1600px;
+  max-width: 1200px;
   margin: 0 auto;
+  padding: 20px;
 }
 
 .radio-cabinet {
   width: 100%;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5), 0 10px 30px rgba(0, 0, 0, 0.4);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 
+    inset 0 0 30px rgba(0, 0, 0, 0.5), 
+    0 10px 30px rgba(0, 0, 0, 0.4);
   background-color: #8B4513;
   position: relative;
   overflow: hidden;
-  background-image: linear-gradient(30deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0) 100%);
+  background-image: 
+    linear-gradient(30deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0) 100%),
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%238B4513" /><rect width="100" height="50" fill="%237A3D11" opacity="0.4" /><path d="M0,0 L100,0 L100,100 L0,100 Z" fill="none" stroke="%23000" stroke-width="0.5" stroke-opacity="0.1" /><path d="M0,50 L100,50" stroke="%23000" stroke-width="0.5" stroke-opacity="0.1" /></svg>');
   transition: all 0.3s ease;
 }
 
-/* Estilo cuando está apagado */
-.radio-cabinet.power-off {
-  background-color: #5a3523;
-  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.7), 0 5px 15px rgba(0, 0, 0, 0.6);
-}
-
+/* Estilo de madera con textura */
 .radio-cabinet::before {
   content: "";
   position: absolute;
   inset: 0;
   opacity: 0.3;
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path d="M0,50 Q25,30 50,50 T100,50" fill="none" stroke="%23000" stroke-width="0.5" opacity="0.3" /><path d="M0,60 Q25,40 50,60 T100,60" fill="none" stroke="%23000" stroke-width="0.5" opacity="0.3" /><path d="M0,70 Q25,50 50,70 T100,70" fill="none" stroke="%23000" stroke-width="0.5" opacity="0.3" /><path d="M0,40 Q25,20 50,40 T100,40" fill="none" stroke="%23000" stroke-width="0.5" opacity="0.3" /><path d="M0,30 Q25,10 50,30 T100,30" fill="none" stroke="%23000" stroke-width="0.5" opacity="0.3" /></svg>');
-  background-size: 100% 100%;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" stitchTiles="stitch" /></filter><rect width="100" height="100" filter="url(%23noise)" opacity="0.1" /></svg>');
+  background-size: 200px 200px;
+  pointer-events: none;
+}
+
+/* Estilo cuando está apagado */
+.radio-cabinet.power-off {
+  background-color: #5a3523;
+  box-shadow: 
+    inset 0 0 30px rgba(0, 0, 0, 0.7), 
+    0 5px 15px rgba(0, 0, 0, 0.6);
 }
 
 .radio-panel {
-  background-color: #222;
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
-  border-radius: 8px;
-  padding: 16px;
+  background-color: #1a1a1a;
+  box-shadow: 
+    inset 0 0 10px rgba(0, 0, 0, 0.8),
+    0 0 5px rgba(0, 0, 0, 0.5);
+  border-radius: 10px;
+  padding: 20px;
   position: relative;
+  border: 2px solid #333;
 }
 
 .radio-layout {
   display: flex;
   flex-direction: row;
-  gap: 16px;
+  gap: 20px;
 }
 
 /* Control section (left side) */
@@ -50,20 +63,36 @@
   flex: 0 0 40%;
   display: flex;
   flex-direction: column;
+  padding: 10px;
+  background-color: #222;
+  border-radius: 8px;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.radio-name {
+  text-align: center;
+  margin-bottom: 20px;
+  padding: 5px 0;
+  background-color: #111;
+  border-radius: 5px;
+  border: 1px solid #444;
+}
+
+.radio-name span {
+  color: #e8e3d5; 
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
 }
 
 /* Nueva disposición de perillas con grid */
 .knobs-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   grid-gap: 16px;
   margin-top: 16px;
-}
-
-.knob-cell {
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 .knob-cell {
@@ -81,20 +110,7 @@
   border-radius: 8px;
   padding: 16px;
   box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.7);
-}
-
-.radio-name {
-  text-align: center;
-  margin-bottom: 16px;
-}
-
-.radio-name span {
-  color: #e8e3d5; 
-  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-  font-size: 1.5rem;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
+  border: 1px solid #333;
 }
 
 .wave-display-container {
@@ -103,20 +119,59 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
 .wave-display {
   width: 100%;
-  height: 100%;
-  background-color: #111;
-  border-radius: 6px;
+  height: 250px;
+  background-color: #000;
+  border-radius: 8px;
   overflow: hidden;
   position: relative;
-  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  box-shadow: 
+    inset 0 0 15px rgba(0, 0, 0, 0.8),
+    0 0 5px rgba(0, 0, 0, 0.5);
+  border: 1px solid #444;
   transition: all 0.3s ease;
+}
+
+/* CRT effect */
+.wave-display::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.3) 80%,
+    rgba(0, 0, 0, 0.5) 100%
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Scanline effect */
+.wave-display::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.1),
+    rgba(0, 0, 0, 0.1) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0.3;
 }
 
 /* Estilo del visualizador cuando está apagado */
@@ -126,7 +181,6 @@
   opacity: 0.7;
 }
 
-/* Wave mode selector */
 .wave-mode-selector {
   display: flex;
   justify-content: center;
@@ -140,17 +194,79 @@
 }
 
 .waveform-indicator div {
-  padding: 4px 12px;
-  border-radius: 6px;
+  padding: 6px 14px;
+  border-radius: 4px;
   background-color: #333;
   color: #e8e3d5;
   font-size: 0.85rem;
   letter-spacing: 0.1em;
+  border: 1px solid #555;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
 }
 
 .power-off .waveform-indicator div {
   background-color: #2a2a2a;
   color: #a09a8c;
+}
+
+/* Text to wave module */
+.text-to-letter-wave {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 8px;
+  background-color: #2a2a2a;
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6);
+  border: 1px solid #444;
+  transition: all 0.3s ease;
+}
+
+.text-to-letter-wave.powered-off {
+  opacity: 0.6;
+  background-color: #222;
+}
+
+.text-input-container {
+  display: flex;
+  gap: 12px;
+}
+
+.wave-text-input {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #555;
+  background-color: #111;
+  color: #e8e3d5;
+  font-family: monospace;
+  font-size: 16px;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s ease;
+}
+
+.wave-text-input:focus {
+  outline: none;
+  border-color: #777;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5), 0 0 5px rgba(232, 227, 213, 0.3);
+}
+
+.generate-wave-btn {
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: none;
+  background-color: #8B4513;
+  color: #e8e3d5;
+  font-family: inherit;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease;
+}
+
+.generate-wave-btn:hover:not(:disabled) {
+  background-color: #a05419;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
 }
 
 /* Responsive adjustments */
@@ -167,7 +283,7 @@
   .display-section {
     flex: auto;
     order: 1;
-    min-height: 300px;
+    min-height: 350px;
   }
   
   .knobs-grid {
@@ -178,5 +294,32 @@
 @media (max-width: 768px) {
   .knobs-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .radio-cabinet {
+    padding: 15px;
+  }
+  
+  .radio-panel {
+    padding: 15px;
+  }
+  
+  .wave-display {
+    height: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .knobs-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: 10px;
+  }
+  
+  .text-input-container {
+    flex-direction: column;
+  }
+  
+  .wave-display {
+    height: 150px;
   }
 }

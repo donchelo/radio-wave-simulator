@@ -1,0 +1,107 @@
+.wave-mode-selector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 16px 0;
+  padding: 10px;
+  background-color: #2a2a2a;
+  border-radius: 8px;
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6);
+  border: 1px solid #444;
+}
+
+.wave-mode-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #e8e3d5;
+  margin-bottom: 8px;
+  letter-spacing: 0.1em;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.7);
+}
+
+.mode-toggle-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mode-indicator {
+  font-size: 0.7rem;
+  color: #999;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  transition: all 0.3s ease;
+}
+
+.mode-indicator.active {
+  color: #ff9500;
+  text-shadow: 0 0 5px rgba(255, 149, 0, 0.5);
+}
+
+/* Estilo de Switch Toggle */
+.toggle-switch {
+  position: relative;
+}
+
+.toggle-checkbox {
+  height: 0;
+  width: 0;
+  visibility: hidden;
+  position: absolute;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  width: 50px;
+  height: 24px;
+  background: #333;
+  border-radius: 100px;
+  position: relative;
+  transition: background-color 0.3s;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  border: 1px solid #444;
+}
+
+.toggle-label::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background: #e8e3d5;
+  border-radius: 50%;
+  transition: 0.3s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.toggle-checkbox:checked + .toggle-label {
+  background: #555;
+}
+
+.toggle-checkbox:checked + .toggle-label::after {
+  left: calc(100% - 2px);
+  transform: translateX(-100%);
+  background: #ff9500;
+  box-shadow: 0 0 8px rgba(255, 149, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.toggle-label:active::after {
+  width: 25px;
+}
+
+.toggle-label.disabled {
+  background: #2a2a2a;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.toggle-checkbox:disabled + .toggle-label::after {
+  background: #666;
+}
