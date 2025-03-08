@@ -11,8 +11,7 @@ const DisplaySection = ({
   getBaseColor, 
   updateParam,
   handleWaveModeToggle,
-  handleTextWaveGenerated,
-  toggleDisplayEffect
+  handleTextWaveGenerated
 }) => {
   const { 
     powerOn, 

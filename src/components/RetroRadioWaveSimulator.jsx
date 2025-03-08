@@ -23,8 +23,6 @@ const RetroRadioWaveSimulator = () => {
     textWaveMode: false,
     textWaveData: [],
     displayTheme: 'green',
-    showScanline: true,
-    showPersistence: true,
     // Nuevos parámetros visuales
     brightness: 100, // 0-200% (100% es normal)
     noise: 0,        // 0-100%
@@ -97,13 +95,6 @@ const RetroRadioWaveSimulator = () => {
   const handlePowerToggle = (value) => {
     const powerOn = value === 1;
     updateParam('powerOn', powerOn);
-    
-    // Efecto de apagado/encendido con delay
-    if (powerOn) {
-      setTimeout(() => updateParam('showScanline', true), 300);
-    } else {
-      updateParam('showScanline', false);
-    }
   };
   
   const handleWaveModeToggle = (value) => {
@@ -115,14 +106,6 @@ const RetroRadioWaveSimulator = () => {
     
     if (waveData && waveData.length > 0) {
       updateParam('textWaveMode', true);
-    }
-  };
-  
-  const toggleDisplayEffect = (effect) => {
-    if (effect === 'scanline') {
-      updateParam('showScanline', !waveParams.showScanline);
-    } else if (effect === 'persistence') {
-      updateParam('showPersistence', !waveParams.showPersistence);
     }
   };
   
@@ -166,7 +149,6 @@ const RetroRadioWaveSimulator = () => {
             getBaseColor={getBaseColor}
             handleWaveModeToggle={handleWaveModeToggle}
             handleTextWaveGenerated={handleTextWaveGenerated}
-            toggleDisplayEffect={toggleDisplayEffect}
           />
           
           {/* Panel de control con perillas debajo */}

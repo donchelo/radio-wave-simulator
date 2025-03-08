@@ -244,16 +244,6 @@
   pointer-events: none;
 }
 
-/* Mejorar animación de línea de escaneo para que sea más suave */
-@keyframes scanAnimation {
-  0% {
-    top: 0;
-  }
-  100% {
-    top: 100%;
-  }
-}
-
 /* Mejora de estilos para ondas con eco */
 .echo-wave {
   opacity: 0.5;

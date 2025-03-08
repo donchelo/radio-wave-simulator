@@ -11,8 +11,6 @@ const WaveDisplay = ({ waveParams, getBaseColor, svgRef }) => {
     textWaveMode,
     textWaveData,
     displayTheme,
-    showScanline,
-    showPersistence,
     time,
     waveform,
     // Nuevos parámetros
@@ -22,7 +20,6 @@ const WaveDisplay = ({ waveParams, getBaseColor, svgRef }) => {
     echo
   } = waveParams;
   
-  const canvasRef = useRef(null);
   const [displayDimensions, setDisplayDimensions] = useState({ width: 800, height: 250 });
   
   // Actualizar dimensiones cuando cambia el tamaño
@@ -39,119 +36,6 @@ const WaveDisplay = ({ waveParams, getBaseColor, svgRef }) => {
     
     return () => window.removeEventListener('resize', updateDimensions);
   }, [svgRef]);
-  
-  // Efecto para dibujar ondas con persistencia
-  useEffect(() => {
-    if (!powerOn || !canvasRef.current || !showPersistence) return;
-    
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    const { width, height } = displayDimensions;
-    
-    // Configurar canvas
-    canvas.width = width;
-    canvas.height = height;
-    
-    const drawWave = () => {
-      // Aplicar desvanecimiento gradual
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-      ctx.fillRect(0, 0, width, height);
-      
-      if (textWaveMode && textWaveData && textWaveData.length > 0) {
-        // Dibujar onda basada en texto
-        ctx.beginPath();
-        for (let i = 0; i < textWaveData.length; i++) {
-          const point = textWaveData[i];
-          if (i === 0) {
-            ctx.moveTo(point.x, point.y);
-          } else {
-            ctx.lineTo(point.x, point.y);
-          }
-        }
-        // Usar el color con brillo ajustado
-        ctx.strokeStyle = getThemeColor(displayTheme, 1, brightness);
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        
-        // Dibujar eco si está habilitado
-        if (echo > 0) {
-          ctx.beginPath();
-          const echoPoints = generateWavePoints({
-            ...waveParams,
-            svgDimensions: displayDimensions
-          }, 1, 10)
-            .split(' ')
-            .map(point => {
-              const [x, y] = point.split(',');
-              return { x: parseFloat(x), y: parseFloat(y) };
-            });
-          
-          for (let i = 0; i < echoPoints.length; i++) {
-            const point = echoPoints[i];
-            if (i === 0) {
-              ctx.moveTo(point.x, point.y);
-            } else {
-              ctx.lineTo(point.x, point.y);
-            }
-          }
-          
-          // Usar el color con opacidad reducida para el eco
-          ctx.strokeStyle = getThemeColor(displayTheme, 0.5, brightness);
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
-        }
-      } else {
-        // Calcular cuántas ondas dibujar en total (incluyendo ecos)
-        const totalWaves = echo > 0 ? waveCount * 2 : waveCount;
-        
-        // Dibujar ondas normales y ecos
-        for (let i = 0; i < totalWaves; i++) {
-          const points = generateWavePoints({
-            ...waveParams,
-            svgDimensions: displayDimensions
-          }, i, 10)
-            .split(' ')
-            .map(point => {
-              const [x, y] = point.split(',');
-              return { x: parseFloat(x), y: parseFloat(y) };
-            });
-          
-          if (points.length < 2) continue;
-          
-          ctx.beginPath();
-          ctx.moveTo(points[0].x, points[0].y);
-          
-          for (let j = 1; j < points.length; j++) {
-            ctx.lineTo(points[j].x, points[j].y);
-          }
-          
-          // Determinar si esta es una onda de eco
-          const isEchoWave = i >= waveCount;
-          
-          // Usar opacidad reducida para ecos
-          const echoOpacity = isEchoWave ? (1 - (i - waveCount) * 0.2) * 0.7 : 1 - i * 0.1;
-          
-          ctx.strokeStyle = getThemeColor(displayTheme, echoOpacity, brightness);
-          ctx.lineWidth = isEchoWave ? 1 : 3 - i * 0.3;
-          ctx.stroke();
-        }
-      }
-    };
-    
-    // Iniciar animación
-    let animationId;
-    if (powerOn) {
-      const animate = () => {
-        drawWave();
-        animationId = requestAnimationFrame(animate);
-      };
-      animate();
-    }
-    
-    return () => {
-      if (animationId) cancelAnimationFrame(animationId);
-    };
-  }, [powerOn, waveParams, textWaveMode, textWaveData, showPersistence, displayDimensions, getBaseColor, waveCount, displayTheme, brightness, echo]);
   
   // Obtener el nombre del tipo de onda
   const getWaveformName = () => {
@@ -193,22 +77,6 @@ const WaveDisplay = ({ waveParams, getBaseColor, svgRef }) => {
   return (
     <div className="wave-display-container">
       <div className={`wave-display ${displayTheme} ${!powerOn ? 'powered-off' : ''}`}>
-        {/* Canvas para efecto de persistencia */}
-        {showPersistence && (
-          <canvas 
-            ref={canvasRef} 
-            className="persistence-canvas"
-            style={{ 
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              zIndex: 0
-            }}
-          />
-        )}
-        
         {/* SVG para visualización de ondas */}
         <svg 
           ref={svgRef} 
@@ -226,8 +94,8 @@ const WaveDisplay = ({ waveParams, getBaseColor, svgRef }) => {
             strokeDasharray="4,4" 
           />
           
-          {/* Renderizar ondas solo si no estamos usando persistencia */}
-          {(!showPersistence || !powerOn) && !textWaveMode && (
+          {/* Renderizar ondas normales y ecos */}
+          {!textWaveMode && (
             // Calcular cuántas ondas dibujar en total (incluyendo ecos)
             Array.from({ length: echo > 0 ? waveCount * 2 : waveCount }).map((_, index) => {
               // Determinar si esta es una onda de eco
@@ -253,8 +121,8 @@ const WaveDisplay = ({ waveParams, getBaseColor, svgRef }) => {
             })
           )}
           
-          {/* Renderizar onda de texto si está en modo texto y no usamos persistencia */}
-          {(!showPersistence || !powerOn) && textWaveMode && textWaveData && textWaveData.length > 0 && (
+          {/* Renderizar onda de texto */}
+          {textWaveMode && textWaveData && textWaveData.length > 0 && (
             <>
               <polyline
                 points={generateWavePoints({
@@ -298,23 +166,6 @@ const WaveDisplay = ({ waveParams, getBaseColor, svgRef }) => {
             ...getNoiseStyle()
           }}
         />
-        
-        {/* Efecto de línea de escaneo */}
-        {showScanline && powerOn && (
-          <div 
-            className="scan-line"
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '2px',
-              background: `rgba(255, 255, 255, ${brightness / 200})`,
-              animation: `scanAnimation ${8 / Math.max(0.1, waveParams.speed)}s linear infinite`,
-              zIndex: 3
-            }}
-          />
-        )}
         
         {/* Efecto CRT */}
         <div 
@@ -362,18 +213,6 @@ const WaveDisplay = ({ waveParams, getBaseColor, svgRef }) => {
             </div>
           </div>
         )}
-      </div>
-      
-      {/* Indicador de tipo de onda */}
-      <div className="waveform-indicator">
-        <div>
-          {powerOn && (
-            <>
-              {textWaveMode ? "TEXT WAVE" : getWaveformName()}
-            </>
-          )}
-          {!powerOn && "STANDBY"}
-        </div>
       </div>
     </div>
   );

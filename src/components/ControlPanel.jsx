@@ -17,7 +17,7 @@ const ControlPanel = ({ waveParams, updateParam, handlePowerToggle }) => {
   const { 
     amplitude, frequency, phase, waveCount, hue, saturation, 
     waveform, distortion, harmonics, modulation, tremolo, 
-    powerOn, showScanline, showPersistence,
+    powerOn,
     // Nuevos parámetros
     brightness, noise, glitch, speed, echo
   } = waveParams;
@@ -199,7 +199,7 @@ const ControlPanel = ({ waveParams, updateParam, handlePowerToggle }) => {
         </div>
       </div>
       
-      {/* Cuarta fila: Ajustes adicionales y controles de pantalla */}
+      {/* Cuarta fila: Ajustes adicionales */}
       <div className="knobs-row">
         <div className="knob-unit">
           <VintageKnob 
@@ -240,21 +240,17 @@ const ControlPanel = ({ waveParams, updateParam, handlePowerToggle }) => {
           <div className="knob-value">{saturation.toFixed(0)}</div>
         </div>
         
-        <div className="effect-controls">
-          <button 
-            className={`effect-button ${showScanline ? 'active' : ''}`}
-            onClick={() => updateParam('showScanline', !showScanline)}
+        <div className="knob-unit">
+          <VintageKnob 
+            value={hue} 
+            min={0} 
+            max={359} 
+            onChange={(val) => updateParam('hue', val)} 
+            size={70}
+            label="HUE"
             disabled={!powerOn}
-          >
-            SCAN
-          </button>
-          <button 
-            className={`effect-button ${showPersistence ? 'active' : ''}`}
-            onClick={() => updateParam('showPersistence', !showPersistence)}
-            disabled={!powerOn}
-          >
-            PERSIST
-          </button>
+          />
+          <div className="knob-value">{hue.toFixed(0)}</div>
         </div>
       </div>
     </div>
