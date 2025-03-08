@@ -1,6 +1,6 @@
 // Utilidades para generar y manipular ondas
 
-// Genera los puntos para una onda específica
+// Generates points for a specific wave
 export const generateWavePoints = (waveParams, waveIndex, padding = 10) => {
   const {
     amplitude,
@@ -15,157 +15,90 @@ export const generateWavePoints = (waveParams, waveIndex, padding = 10) => {
     powerOn,
     textWaveMode,
     textWaveData,
-    svgDimensions,
-    // Nuevos parámetros
-    noise,
-    glitch,
-    echo
+    svgDimensions
   } = waveParams;
   
   const { width, height } = svgDimensions;
   
-  // Si estamos en modo de onda de texto y hay datos disponibles, usamos esos
-  if (textWaveMode && textWaveData.length > 0) {
-    // Si el índice es 0, dibujamos la onda principal
-    if (waveIndex === 0) {
-      // Aplicar efectos de glitch y ruido a los puntos del texto
-      let modifiedPoints = textWaveData.map(point => {
-        let x = point.x;
-        let y = point.y;
-        
-        // Aplicar glitch (desplazamientos horizontales aleatorios)
-        if (glitch > 0 && Math.random() < glitch * 0.1) {
-          const glitchAmount = (Math.random() * 2 - 1) * glitch * 5;
-          x += glitchAmount;
-        }
-        
-        // Aplicar ruido (desplazamientos verticales aleatorios)
-        if (noise > 0) {
-          const noiseAmount = (Math.random() * 2 - 1) * noise * 0.8;
-          y += noiseAmount;
-        }
-        
-        return `${x},${y}`;
-      }).join(' ');
-      
-      return modifiedPoints;
-    } 
-    // Si el índice es 1 y hay eco, dibujamos la onda eco
-    else if (waveIndex === 1 && echo > 0) {
-      // Versión "eco" para mostrar una versión atenuada/retrasada
-      const echoPoints = textWaveData.map(point => {
-        // Aplicar desplazamiento de fase para el eco
-        const echoDelay = echo * 5;
-        const x = Math.max(padding, Math.min(width - padding, point.x - echoDelay));
-        const y = point.y + (Math.random() * 2 - 1) * echo * 0.5;
-        
-        return `${x},${y}`;
-      }).join(' ');
-      
-      return echoPoints;
+  // Use text wave data if in text mode
+  if (textWaveMode && textWaveData && textWaveData.length > 0) {
+    // For multiple waves, only the first shows the text
+    if (waveIndex > 0) {
+      return '';
     }
     
-    // Para los demás índices, no mostramos nada en modo texto
-    return '';
+    // Convert points to string format for polyline
+    const pointsStr = textWaveData.map((point) => {
+      return `${point.x},${point.y}`;
+    }).join(' ');
+    
+    return pointsStr;
   }
   
   const points = [];
-  const steps = 200; // Aumentado para mayor suavidad
+  const steps = 200; // More points for smoother waves
   
-  // Si está apagado, mostrar una línea plana en el centro
+  // If powered off, show a flat line in the center
   if (!powerOn) {
     return `${padding},${height / 2} ${width - padding},${height / 2}`;
   }
   
-  // Generación de ondas de eco (para índices mayores al waveCount original)
-  const isEchoWave = waveIndex >= waveParams.waveCount && echo > 0;
-  const echoIndex = waveIndex - waveParams.waveCount;
+  // Adjust phase and amplitude slightly for each wave
+  const wavePhaseOffset = waveIndex * (Math.PI / 8);
+  const waveAmplitude = amplitude * (1 - waveIndex * 0.15);
   
-  // Determinar el índice de onda real o de eco
-  const actualWaveIndex = isEchoWave ? echoIndex % waveParams.waveCount : waveIndex;
-  
-  // Ajusta la fase y la amplitud para cada onda
-  const wavePhaseOffset = actualWaveIndex * (Math.PI / 8);
-  
-  // Reducir amplitud para ondas normales según su índice y para ecos
-  let waveAmplitude;
-  if (isEchoWave) {
-    // Las ondas de eco tienen amplitud reducida basada en el valor de eco
-    const echoReduction = 1 - echo * 0.4;
-    waveAmplitude = amplitude * (1 - actualWaveIndex * 0.15) * echoReduction;
-  } else {
-    // Ondas normales
-    waveAmplitude = amplitude * (1 - actualWaveIndex * 0.15);
-  }
-  
-  // Efecto de tremolo (modulación de amplitud)
+  // Tremolo effect (amplitude modulation)
   const tremoloEffect = tremolo > 0 ? 1 - (tremolo * 0.5 * Math.sin(time * 5)) : 1;
   
-  // Genera cada punto de la onda
+  // Generate each point of the wave
   for (let i = 0; i <= steps; i++) {
-    let x = i * ((width - padding * 2) / steps) + padding;
+    const x = i * ((width - padding * 2) / steps) + padding;
     const normalX = i / steps;
     
-    // Aplicar glitch (desplazamientos horizontales aleatorios y esporádicos)
-    if (glitch > 0 && Math.random() < glitch * 0.02) {
-      const glitchOffset = (Math.random() * 2 - 1) * glitch * 5;
-      x += glitchOffset;
-    }
-    
-    // Modulación de frecuencia
+    // Frequency modulation
     const modFreq = modulation > 0 
       ? frequency * (1 + modulation * 0.3 * Math.sin(time * 2)) 
       : frequency;
     
-    // Retraso de fase para ondas de eco
-    const echoPhaseDelay = isEchoWave ? (echoIndex + 1) * echo * 0.2 : 0;
+    // Calculate total phase with effects
+    const totalPhase = normalX * modFreq * Math.PI * 2 + phase + wavePhaseOffset + time;
     
-    // Calcular la fase total con efectos
-    const totalPhase = normalX * modFreq * Math.PI * 2 + phase + wavePhaseOffset + time - echoPhaseDelay;
-    
-    // Seleccionar forma de onda según el parámetro waveform
+    // Select waveform based on parameter
     let waveValue;
     switch(Math.floor(waveform * 4)) {
-      case 1: // Onda cuadrada
+      case 1: // Square wave
         waveValue = Math.sin(totalPhase) >= 0 ? 1 : -1;
         break;
-      case 2: // Onda triangular
+      case 2: // Triangle wave
         waveValue = Math.asin(Math.sin(totalPhase)) * (2/Math.PI);
         break;
-      case 3: // Onda de sierra
+      case 3: // Sawtooth wave
         waveValue = (2 * (totalPhase/(2*Math.PI) - Math.floor(0.5 + totalPhase/(2*Math.PI))));
         break;
-      default: // Onda senoidal (por defecto)
+      default: // Sine wave (default)
         waveValue = Math.sin(totalPhase);
     }
     
-    // Aplicar distorsión (simular clipping/saturación)
+    // Apply distortion (simulate clipping/saturation)
     if (distortion > 0) {
       waveValue = Math.tanh(waveValue * (1 + distortion * 3)) / Math.tanh(1 + distortion * 3);
     }
     
-    // Aplicar armónicos adicionales
+    // Apply additional harmonics
     if (harmonics > 0) {
-      // Añadir tercer armónico
+      // Add third harmonic
       waveValue += harmonics * 0.3 * Math.sin(totalPhase * 3);
-      // Añadir quinto armónico
+      // Add fifth harmonic
       waveValue += harmonics * 0.15 * Math.sin(totalPhase * 5);
       
-      // Normalizar la amplitud después de añadir armónicos
+      // Normalize amplitude after adding harmonics
       waveValue /= (1 + harmonics * 0.45);
     }
     
-    // Aplicar efecto de tremolo (modulación de amplitud)
+    // Apply tremolo effect (amplitude modulation)
     waveValue *= tremoloEffect;
     
-    // Calcular posición Y base
-    let y = height / 2 - waveAmplitude * waveValue;
-    
-    // Aplicar ruido (pequeñas variaciones aleatorias)
-    if (noise > 0) {
-      const noiseAmount = (Math.random() * 2 - 1) * noise * 0.8;
-      y += noiseAmount;
-    }
+    const y = height / 2 - waveAmplitude * waveValue;
     
     points.push(`${x},${y}`);
   }
@@ -173,24 +106,7 @@ export const generateWavePoints = (waveParams, waveIndex, padding = 10) => {
   return points.join(" ");
 };
 
-// Función auxiliar para calcular colores basados en el tema actual
-export const getThemeColor = (theme, opacity = 1, brightness = 100) => {
-  // Ajustar la luminosidad basada en el brillo
-  const luminosityFactor = brightness / 100;
-  
-  switch(theme) {
-    case 'green':
-      return `rgba(${Math.min(255, 32 * luminosityFactor)}, ${Math.min(255, 238 * luminosityFactor)}, ${Math.min(255, 32 * luminosityFactor)}, ${opacity})`;
-    case 'amber':
-      return `rgba(${Math.min(255, 255 * luminosityFactor)}, ${Math.min(255, 149 * luminosityFactor)}, ${Math.min(255, 0 * luminosityFactor)}, ${opacity})`;
-    case 'blue':
-      return `rgba(${Math.min(255, 32 * luminosityFactor)}, ${Math.min(255, 156 * luminosityFactor)}, ${Math.min(255, 238 * luminosityFactor)}, ${opacity})`;
-    default:
-      return `rgba(${Math.min(255, 255 * luminosityFactor)}, ${Math.min(255, 255 * luminosityFactor)}, ${Math.min(255, 255 * luminosityFactor)}, ${opacity})`;
-  }
-};
-
-// Función para generar texto a forma de onda
+// Function to generate text wave
 export const generateTextWave = (text, canvas, params) => {
   if (!text || !canvas) return [];
   
@@ -198,37 +114,37 @@ export const generateTextWave = (text, canvas, params) => {
   const width = canvas.width;
   const height = canvas.height;
   
-  // Limpiar canvas
+  // Clear canvas
   ctx.clearRect(0, 0, width, height);
   
-  // Configurar fuente
+  // Set font
   const fontSize = Math.min(100, width / (text.length * 0.7));
   ctx.font = `bold ${fontSize}px monospace`;
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'center';
   
-  // Dibujar texto (blanco para muestreo)
+  // Draw text (white for sampling)
   ctx.fillStyle = 'white';
   ctx.fillText(text, width / 2, height / 2);
   
-  // Obtener datos de píxeles
+  // Get pixel data
   const imageData = ctx.getImageData(0, 0, width, height);
   const pixels = imageData.data;
   
-  // Muestrear puntos
+  // Sample points
   const points = [];
   const sampleStep = 2;
   
-  // Recorrer horizontalmente
+  // Scan horizontally
   for (let x = 0; x < width; x += sampleStep) {
-    // Para cada columna, escanear de arriba a abajo
+    // For each column, scan from top to bottom
     let topY = null;
     let bottomY = null;
     
     for (let y = 0; y < height; y++) {
       const index = (y * width + x) * 4;
       
-      // Si encontramos un píxel no transparente
+      // If we find a non-transparent pixel
       if (pixels[index + 3] > 0) {
         if (topY === null) {
           topY = y;
@@ -237,46 +153,51 @@ export const generateTextWave = (text, canvas, params) => {
       }
     }
     
-    // Si encontramos texto en esta columna
+    // If we found text in this column
     if (topY !== null) {
       points.push({ x, y: topY, edge: 'top' });
       points.push({ x, y: bottomY, edge: 'bottom' });
     }
   }
   
-  // Ordenar los puntos
+  // Sort points
   const sortedPoints = [
     ...points.filter(p => p.edge === 'top').sort((a, b) => a.x - b.x),
     ...points.filter(p => p.edge === 'bottom').sort((a, b) => b.x - a.x)
   ];
   
-  // Aplicar efectos a los puntos
+  // Apply distortion effects
   return sortedPoints.map((point, index) => {
     let { x, y } = point;
     
-    // Aplicar distorsión
+    // Apply distortion
     if (params.distortion > 0) {
       y += (Math.random() * 2 - 1) * params.distortion * 10;
     }
     
-    // Aplicar modulación
+    // Apply modulation
     if (params.modulation > 0) {
       const phaseOffset = (index / sortedPoints.length) * Math.PI * 2;
       y += Math.sin(phaseOffset + params.time) * params.modulation * 20;
     }
     
-    // Aplicar glitch
-    if (params.glitch > 0 && Math.random() < params.glitch * 0.05) {
-      const glitchAmount = (Math.random() * 2 - 1) * params.glitch * 8;
-      x += glitchAmount;
-    }
-    
-    // Aplicar ruido
-    if (params.noise > 0) {
-      const noiseAmount = (Math.random() * 2 - 1) * params.noise * 2;
-      y += noiseAmount;
-    }
-    
     return { x, y };
   });
+};
+
+// Function to get color based on theme
+export const getThemeColor = (theme, opacity = 1, brightness = 100) => {
+  // Adjust brightness factor (0-100)
+  const brightnessFactor = brightness / 100;
+  
+  switch(theme) {
+    case 'green':
+      return `rgba(${32 * brightnessFactor}, ${238 * brightnessFactor}, ${32 * brightnessFactor}, ${opacity})`;
+    case 'amber':
+      return `rgba(${255 * brightnessFactor}, ${149 * brightnessFactor}, ${0 * brightnessFactor}, ${opacity})`;
+    case 'blue':
+      return `rgba(${32 * brightnessFactor}, ${156 * brightnessFactor}, ${238 * brightnessFactor}, ${opacity})`;
+    default:
+      return `rgba(${255 * brightnessFactor}, ${255 * brightnessFactor}, ${255 * brightnessFactor}, ${opacity})`;
+  }
 };
