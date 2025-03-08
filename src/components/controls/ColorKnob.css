@@ -1,14 +1,161 @@
 .color-knob-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   position: relative;
 }
 
-.color-preview {
-  position: absolute;
-  width: 16px;
-  height: 16px;
+.knob-with-markers {
+  position: relative;
+  height: 110px;
+  width: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+}
+
+.color-knob {
+  position: relative;
+  z-index: 2;
+  transition: transform 0.1s ease;
   border-radius: 50%;
-  bottom: 16px;
-  right: 0;
-  border: 2px solid #444;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  user-select: none;
+  transform-origin: center center;
+}
+
+/* Shadow underneath the knob for depth */
+.knob-shadow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 90%;
+  height: 90%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+  z-index: -1;
+}
+
+.color-knob.hover {
+  transform: scale(1.05);
+}
+
+.color-knob.dragging {
+  cursor: grabbing;
+  transform: scale(1.08);
+}
+
+.color-knob.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.knob-base {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 1px solid #444;
+  transition: all 0.15s ease;
+}
+
+.disabled .knob-base {
+  filter: grayscale(100%);
+  opacity: 0.5;
+}
+
+.knob-indicator {
+  position: absolute;
+  width: 4px;
+  height: 40%;
+  background-color: #ffffff;
+  bottom: 50%;
+  left: 50%;
+  transform-origin: bottom center;
+  transition: transform 0.15s cubic-bezier(0.4, 0.0, 0.2, 1);
+  border-radius: 4px 4px 0 0;
+  box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.disabled .knob-indicator {
+  background-color: #ddd;
+}
+
+.knob-center {
+  position: absolute;
+  width: 25%;
+  height: 25%;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 0.15s ease;
+}
+
+.disabled .knob-center {
+  filter: grayscale(100%);
+  opacity: 0.5;
+}
+
+/* Interactive shine effect */
+.knob-shine {
+  position: absolute;
+  width: 150%;
+  height: 150%;
+  top: -25%;
+  left: -25%;
+  background: radial-gradient(
+    ellipse at 30% 30%,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(255, 255, 255, 0) 60%
+  );
+  opacity: 0.3;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.knob-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  text-align: center;
+  margin-top: 8px;
+  font-weight: 500;
+  color: #e8e3d5;
+  letter-spacing: 0.1em;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.7);
+}
+
+.knob-value {
+  font-size: 0.75rem;
+  text-align: center;
+  font-weight: bold;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+  transition: all 0.15s ease;
+}
+
+/* Color marker styles */
+.color-knob-marker {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  left: 50%;
+  top: 50%;
+  z-index: 1;
+  transition: all 0.2s ease;
+}
+
+/* Focus styles for accessibility */
+.color-knob:focus {
+  outline: none;
+}
+
+.color-knob:focus .knob-base {
+  box-shadow: 
+    inset 0 2px 5px rgba(255, 255, 255, 0.1),
+    0 0 0 2px rgba(255, 255, 255, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.4);
 }

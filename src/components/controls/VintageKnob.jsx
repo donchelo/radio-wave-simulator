@@ -1,130 +1,222 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import './VintageKnob.css';
 
-const VintageKnob = ({ value, min, max, onChange, size = 80, label, disabled = false }) => {
+const VintageKnob = ({ 
+  value, 
+  min, 
+  max, 
+  onChange, 
+  size = 80, 
+  label, 
+  disabled = false,
+  sensitivity = 1.0  // New sensitivity parameter (1.0 = default, lower = more subtle)
+}) => {
   const knobRef = useRef(null);
-  const isDraggingRef = useRef(false);
-  const previousYRef = useRef(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startPosition, setStartPosition] = useState({ x: 0, y: 0 });
+  const [knobRotation, setKnobRotation] = useState(getRotationFromValue(value));
+  const [hoverState, setHoverState] = useState(false);
+  const [dragType, setDragType] = useState('vertical'); // 'vertical' or 'rotational'
   
-  // Convertir valor a rotación (grados)
-  const getRotation = () => {
-    const percentage = (value - min) / (max - min);
-    return percentage * 270 - 135; // -135° a 135°
-  };
+  // Convert value to rotation angle
+  function getRotationFromValue(val) {
+    const percentage = (val - min) / (max - min);
+    return percentage * 270 - 135; // -135° to 135°
+  }
   
-  // Registrar eventos globales una sola vez
+  // Convert rotation angle to value
+  function getValueFromRotation(rotation) {
+    const normalizedRotation = rotation + 135;
+    const percentage = normalizedRotation / 270;
+    return min + percentage * (max - min);
+  }
+
+  // Update knob rotation when value changes externally
   useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (!isDraggingRef.current || disabled) return;
+    setKnobRotation(getRotationFromValue(value));
+  }, [value, min, max]);
+
+  // Calculate value based on mouse/touch movement
+  const calculateValueChange = (clientX, clientY) => {
+    if (!knobRef.current || disabled) return value;
+
+    const knobRect = knobRef.current.getBoundingClientRect();
+    const knobCenterX = knobRect.left + knobRect.width / 2;
+    const knobCenterY = knobRect.top + knobRect.height / 2;
+    
+    if (dragType === 'rotational') {
+      // Rotational control (like turning an actual knob)
+      const angle = Math.atan2(clientY - knobCenterY, clientX - knobCenterX) * (180 / Math.PI);
+      // Convert angle to -135 to 135 range
+      let newRotation = angle + 90; // Adjust to make "up" position the starting point
+      if (newRotation > 180) newRotation -= 360;
       
-      const deltaY = previousYRef.current - e.clientY;
-      previousYRef.current = e.clientY;
+      // Clamp to -135 to 135 range
+      newRotation = Math.max(-135, Math.min(135, newRotation));
+      setKnobRotation(newRotation);
       
+      return getValueFromRotation(newRotation);
+    } 
+    else {
+      // Vertical movement (more precise)
+      const deltaY = startPosition.y - clientY;
+      
+      // Apply sensitivity factor (lower = more subtle movement)
+      const adjustedDeltaY = deltaY * sensitivity;
+      
+      // Scale sensitivity based on range size
       const range = max - min;
-      const sensitivity = 5; // Mayor sensibilidad
-      const valueChange = (deltaY * sensitivity / 100) * range;
+      const valueChange = (adjustedDeltaY / 200) * range;
+      
+      // Calculate new value and clamp it
       const newValue = Math.max(min, Math.min(max, value + valueChange));
       
-      onChange(parseFloat(newValue.toFixed(2)));
-    };
-    
-    const handleMouseUp = () => {
-      isDraggingRef.current = false;
-    };
-    
-    // Agregar eventos
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    
-    // Limpiar eventos al desmontar
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [min, max, value, onChange, disabled]);
-  
+      // Update knob rotation for visual feedback
+      setKnobRotation(getRotationFromValue(newValue));
+      
+      return newValue;
+    }
+  };
+
+  // Handle mouse events
   const handleMouseDown = (e) => {
     if (disabled) return;
     
-    // Prevenir selección de texto
     e.preventDefault();
+    const { clientX, clientY } = e;
     
-    isDraggingRef.current = true;
-    previousYRef.current = e.clientY;
+    // Determine drag type based on modifier keys
+    setDragType(e.altKey ? 'rotational' : 'vertical');
     
-    // Asegurar que el elemento tiene foco
-    if (knobRef.current) {
-      knobRef.current.focus();
-    }
+    setIsDragging(true);
+    setStartPosition({ x: clientX, y: clientY });
+    
+    // Set focus for keyboard control
+    if (knobRef.current) knobRef.current.focus();
   };
   
+  const handleGlobalMouseMove = (e) => {
+    if (!isDragging) return;
+    
+    const newValue = calculateValueChange(e.clientX, e.clientY);
+    
+    // Only update if value actually changed
+    if (newValue !== value) {
+      // Round to 2 decimal places for smoother updates
+      onChange(parseFloat(newValue.toFixed(2)));
+    }
+    
+    // Update start position for next movement calculation
+    setStartPosition({ x: e.clientX, y: e.clientY });
+  };
+  
+  const handleGlobalMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Handle touch events
   const handleTouchStart = (e) => {
     if (disabled) return;
     
     e.preventDefault();
-    isDraggingRef.current = true;
-    previousYRef.current = e.touches[0].clientY;
+    const touch = e.touches[0];
+    setIsDragging(true);
+    setStartPosition({ x: touch.clientX, y: touch.clientY });
   };
   
   const handleTouchMove = (e) => {
-    if (!isDraggingRef.current || disabled) return;
+    if (!isDragging) return;
     
-    e.preventDefault();
     const touch = e.touches[0];
-    const deltaY = previousYRef.current - touch.clientY;
-    previousYRef.current = touch.clientY;
-    
-    const range = max - min;
-    const sensitivity = 5;
-    const valueChange = (deltaY * sensitivity / 100) * range;
-    const newValue = Math.max(min, Math.min(max, value + valueChange));
-    
-    onChange(parseFloat(newValue.toFixed(2)));
-  };
-  
-  const handleTouchEnd = () => {
-    isDraggingRef.current = false;
-  };
-  
-  // Soporte para teclado
-  const handleKeyDown = (e) => {
-    if (disabled) return;
-    
-    let newValue = value;
-    const step = (max - min) / 100;
-    
-    if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
-      newValue = Math.min(max, value + step);
-    } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
-      newValue = Math.max(min, value - step);
-    }
+    const newValue = calculateValueChange(touch.clientX, touch.clientY);
     
     if (newValue !== value) {
       onChange(parseFloat(newValue.toFixed(2)));
     }
+    
+    setStartPosition({ x: touch.clientX, y: touch.clientY });
   };
-  
-  const rotation = getRotation();
-  
-  // Generar marcadores de posición
+
+  // Keyboard control
+  const handleKeyDown = (e) => {
+    if (disabled) return;
+    
+    let newValue = value;
+    const step = (max - min) / 100; // 100 steps for fine control
+    
+    switch (e.key) {
+      case 'ArrowUp':
+      case 'ArrowRight':
+        newValue = Math.min(max, value + step);
+        break;
+      case 'ArrowDown':
+      case 'ArrowLeft':
+        newValue = Math.max(min, value - step);
+        break;
+      case 'Home':
+        newValue = min;
+        break;
+      case 'End':
+        newValue = max;
+        break;
+      case 'PageUp':
+        newValue = Math.min(max, value + step * 10);
+        break;
+      case 'PageDown':
+        newValue = Math.max(min, value - step * 10);
+        break;
+      default:
+        return; // Exit for other keys
+    }
+    
+    if (newValue !== value) {
+      onChange(parseFloat(newValue.toFixed(2)));
+      setKnobRotation(getRotationFromValue(newValue));
+    }
+    
+    e.preventDefault(); // Prevent page scrolling
+  };
+
+  // Set up and clean up global event listeners
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleGlobalMouseMove);
+      document.addEventListener('mouseup', handleGlobalMouseUp);
+      document.addEventListener('touchmove', handleTouchMove);
+      document.addEventListener('touchend', handleGlobalMouseUp);
+    }
+    
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove);
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleGlobalMouseUp);
+    };
+  }, [isDragging, value]);
+
+  // Generate position markers
   const renderMarkers = () => {
     const markers = [];
-    const markerCount = 5; // Reducido para claridad visual
+    const markerCount = 9; // More markers for better visual feedback
     
     for (let i = 0; i < markerCount; i++) {
       const percentage = i / (markerCount - 1);
-      const angle = percentage * 270 - 135; // -135° a 135°
+      const angle = percentage * 270 - 135; // -135° to 135°
       const radians = (angle * Math.PI) / 180;
       
-      // Calcular posición del marcador
-      const radius = size / 2 + 8; // Ligeramente fuera del borde del knob
+      // Calculate marker position
+      const radius = size / 2 + 4;
       const x = Math.sin(radians) * radius;
       const y = -Math.cos(radians) * radius;
+      
+      // Check if this marker is "active" based on current value
+      const markerValue = min + percentage * (max - min);
+      const isActive = value >= markerValue;
       
       markers.push(
         <div 
           key={i}
-          className="knob-marker"
+          className={`knob-marker ${isActive ? 'active' : ''}`}
           style={{
             transform: `translate(${x}px, ${y}px)`,
           }}
@@ -134,19 +226,46 @@ const VintageKnob = ({ value, min, max, onChange, size = 80, label, disabled = f
     
     return markers;
   };
-  
+
+  // Double-click to reset to middle value
+  const handleDoubleClick = () => {
+    if (disabled) return;
+    
+    const middleValue = min + (max - min) / 2;
+    onChange(parseFloat(middleValue.toFixed(2)));
+  };
+
+  // Wheel event for additional control
+  const handleWheel = (e) => {
+    if (disabled) return;
+    
+    e.preventDefault();
+    
+    const delta = e.deltaY > 0 ? -1 : 1; // Invert direction to feel more natural
+    const step = (max - min) / 100 * delta * sensitivity;
+    const newValue = Math.max(min, Math.min(max, value + step));
+    
+    if (newValue !== value) {
+      onChange(parseFloat(newValue.toFixed(2)));
+    }
+  };
+
   return (
     <div className="vintage-knob-container">
-      <div className="knob-with-markers">
+      <div 
+        className="knob-with-markers"
+        onMouseEnter={() => setHoverState(true)}
+        onMouseLeave={() => setHoverState(false)}
+      >
         {renderMarkers()}
         <div 
           ref={knobRef}
-          className={`vintage-knob ${disabled ? 'disabled' : ''}`}
+          className={`vintage-knob ${isDragging ? 'dragging' : ''} ${hoverState ? 'hover' : ''} ${disabled ? 'disabled' : ''}`}
           style={{ width: size, height: size }}
           onMouseDown={handleMouseDown}
           onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
+          onDoubleClick={handleDoubleClick}
+          onWheel={handleWheel}
           onKeyDown={handleKeyDown}
           tabIndex={disabled ? '-1' : '0'}
           role="slider"
@@ -154,19 +273,51 @@ const VintageKnob = ({ value, min, max, onChange, size = 80, label, disabled = f
           aria-valuemax={max}
           aria-valuenow={value}
           aria-disabled={disabled}
+          aria-label={`${label} control`}
+          data-dragtype={dragType}
         >
+          <div className="knob-shadow"></div>
           <div className="knob-base"></div>
           <div 
             className="knob-indicator"
-            style={{ transform: `translateX(-50%) rotate(${rotation}deg)` }}
+            style={{ transform: `translateX(-50%) rotate(${knobRotation}deg)` }}
           ></div>
           <div className="knob-center"></div>
+          
+          {/* Finger grip marks */}
+          <div className="knob-grip-marks">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <div 
+                key={index} 
+                className="grip-mark"
+                style={{
+                  transform: `rotate(${index * 45}deg) translateY(-40%)`
+                }}
+              ></div>
+            ))}
+          </div>
+          
+          {/* Interactive shine effect */}
+          <div className="knob-shine" style={{ 
+            opacity: isDragging ? 0.7 : hoverState ? 0.5 : 0.3,
+            transform: `rotate(${isDragging ? knobRotation / 2 : 0}deg)`
+          }}></div>
         </div>
       </div>
       <div className="knob-label">{label}</div>
       <div className="knob-value">
         {value.toFixed(min === Math.floor(min) && max === Math.floor(max) ? 0 : 2)}
       </div>
+      
+      {/* Help tooltip */}
+      {hoverState && !disabled && (
+        <div className="knob-tooltip">
+          <p>Drag up/down for precision</p>
+          <p>Hold ALT to rotate like real knob</p>
+          <p>Double-click to center</p>
+          <p>Use mouse wheel for fine tuning</p>
+        </div>
+      )}
     </div>
   );
 };
