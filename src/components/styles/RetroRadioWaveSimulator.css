@@ -214,3 +214,71 @@
     letter-spacing: 0.2em;
   }
 }
+
+/* Agregar estilos para los nuevos efectos */
+
+/* Efecto de glitch */
+@keyframes glitchEffect {
+  0% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-3px, 3px);
+  }
+  40% {
+    transform: translate(-3px, -3px);
+  }
+  60% {
+    transform: translate(3px, 3px);
+  }
+  80% {
+    transform: translate(3px, -3px);
+  }
+  100% {
+    transform: translate(0);
+  }
+}
+
+/* Efecto de ruido estático */
+.noise-overlay {
+  pointer-events: none;
+}
+
+/* Mejorar animación de línea de escaneo para que sea más suave */
+@keyframes scanAnimation {
+  0% {
+    top: 0;
+  }
+  100% {
+    top: 100%;
+  }
+}
+
+/* Mejora de estilos para ondas con eco */
+.echo-wave {
+  opacity: 0.5;
+  filter: blur(0.5px);
+}
+
+/* Ajustes de brillo en los temas de color */
+.wave-display.green.high-brightness {
+  box-shadow: inset 0 0 25px rgba(32, 238, 32, 0.4);
+}
+
+.wave-display.amber.high-brightness {
+  box-shadow: inset 0 0 25px rgba(255, 149, 0, 0.4);
+}
+
+.wave-display.blue.high-brightness {
+  box-shadow: inset 0 0 25px rgba(32, 156, 238, 0.4);
+}
+
+/* Estilos para el modo de bajo brillo */
+.wave-display.low-brightness {
+  filter: brightness(0.6);
+}
+
+/* Estilo para el modo de alto brillo */
+.wave-display.high-brightness {
+  filter: brightness(1.5);
+}

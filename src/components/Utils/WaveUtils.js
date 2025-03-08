@@ -15,25 +15,58 @@ export const generateWavePoints = (waveParams, waveIndex, padding = 10) => {
     powerOn,
     textWaveMode,
     textWaveData,
-    svgDimensions
+    svgDimensions,
+    // Nuevos parámetros
+    noise,
+    glitch,
+    echo
   } = waveParams;
   
   const { width, height } = svgDimensions;
   
   // Si estamos en modo de onda de texto y hay datos disponibles, usamos esos
   if (textWaveMode && textWaveData.length > 0) {
-    // Para evitar demasiadas ondas superpuestas en modo texto
-    if (waveIndex > 0) {
-      // Solo mostramos una capa para las ondas de texto
-      return '';
+    // Si el índice es 0, dibujamos la onda principal
+    if (waveIndex === 0) {
+      // Aplicar efectos de glitch y ruido a los puntos del texto
+      let modifiedPoints = textWaveData.map(point => {
+        let x = point.x;
+        let y = point.y;
+        
+        // Aplicar glitch (desplazamientos horizontales aleatorios)
+        if (glitch > 0 && Math.random() < glitch * 0.1) {
+          const glitchAmount = (Math.random() * 2 - 1) * glitch * 5;
+          x += glitchAmount;
+        }
+        
+        // Aplicar ruido (desplazamientos verticales aleatorios)
+        if (noise > 0) {
+          const noiseAmount = (Math.random() * 2 - 1) * noise * 0.8;
+          y += noiseAmount;
+        }
+        
+        return `${x},${y}`;
+      }).join(' ');
+      
+      return modifiedPoints;
+    } 
+    // Si el índice es 1 y hay eco, dibujamos la onda eco
+    else if (waveIndex === 1 && echo > 0) {
+      // Versión "eco" para mostrar una versión atenuada/retrasada
+      const echoPoints = textWaveData.map(point => {
+        // Aplicar desplazamiento de fase para el eco
+        const echoDelay = echo * 5;
+        const x = Math.max(padding, Math.min(width - padding, point.x - echoDelay));
+        const y = point.y + (Math.random() * 2 - 1) * echo * 0.5;
+        
+        return `${x},${y}`;
+      }).join(' ');
+      
+      return echoPoints;
     }
     
-    // Convertir puntos a formato string para polyline
-    const pointsStr = textWaveData.map((point) => {
-      return `${point.x},${point.y}`;
-    }).join(' ');
-    
-    return pointsStr;
+    // Para los demás índices, no mostramos nada en modo texto
+    return '';
   }
   
   const points = [];
@@ -44,25 +77,51 @@ export const generateWavePoints = (waveParams, waveIndex, padding = 10) => {
     return `${padding},${height / 2} ${width - padding},${height / 2}`;
   }
   
-  // Ajusta la fase y la amplitud ligeramente para cada onda
-  const wavePhaseOffset = waveIndex * (Math.PI / 8);
-  const waveAmplitude = amplitude * (1 - waveIndex * 0.15);
+  // Generación de ondas de eco (para índices mayores al waveCount original)
+  const isEchoWave = waveIndex >= waveParams.waveCount && echo > 0;
+  const echoIndex = waveIndex - waveParams.waveCount;
+  
+  // Determinar el índice de onda real o de eco
+  const actualWaveIndex = isEchoWave ? echoIndex % waveParams.waveCount : waveIndex;
+  
+  // Ajusta la fase y la amplitud para cada onda
+  const wavePhaseOffset = actualWaveIndex * (Math.PI / 8);
+  
+  // Reducir amplitud para ondas normales según su índice y para ecos
+  let waveAmplitude;
+  if (isEchoWave) {
+    // Las ondas de eco tienen amplitud reducida basada en el valor de eco
+    const echoReduction = 1 - echo * 0.4;
+    waveAmplitude = amplitude * (1 - actualWaveIndex * 0.15) * echoReduction;
+  } else {
+    // Ondas normales
+    waveAmplitude = amplitude * (1 - actualWaveIndex * 0.15);
+  }
   
   // Efecto de tremolo (modulación de amplitud)
   const tremoloEffect = tremolo > 0 ? 1 - (tremolo * 0.5 * Math.sin(time * 5)) : 1;
   
   // Genera cada punto de la onda
   for (let i = 0; i <= steps; i++) {
-    const x = i * ((width - padding * 2) / steps) + padding;
+    let x = i * ((width - padding * 2) / steps) + padding;
     const normalX = i / steps;
+    
+    // Aplicar glitch (desplazamientos horizontales aleatorios y esporádicos)
+    if (glitch > 0 && Math.random() < glitch * 0.02) {
+      const glitchOffset = (Math.random() * 2 - 1) * glitch * 5;
+      x += glitchOffset;
+    }
     
     // Modulación de frecuencia
     const modFreq = modulation > 0 
       ? frequency * (1 + modulation * 0.3 * Math.sin(time * 2)) 
       : frequency;
     
+    // Retraso de fase para ondas de eco
+    const echoPhaseDelay = isEchoWave ? (echoIndex + 1) * echo * 0.2 : 0;
+    
     // Calcular la fase total con efectos
-    const totalPhase = normalX * modFreq * Math.PI * 2 + phase + wavePhaseOffset + time;
+    const totalPhase = normalX * modFreq * Math.PI * 2 + phase + wavePhaseOffset + time - echoPhaseDelay;
     
     // Seleccionar forma de onda según el parámetro waveform
     let waveValue;
@@ -99,7 +158,14 @@ export const generateWavePoints = (waveParams, waveIndex, padding = 10) => {
     // Aplicar efecto de tremolo (modulación de amplitud)
     waveValue *= tremoloEffect;
     
-    const y = height / 2 - waveAmplitude * waveValue;
+    // Calcular posición Y base
+    let y = height / 2 - waveAmplitude * waveValue;
+    
+    // Aplicar ruido (pequeñas variaciones aleatorias)
+    if (noise > 0) {
+      const noiseAmount = (Math.random() * 2 - 1) * noise * 0.8;
+      y += noiseAmount;
+    }
     
     points.push(`${x},${y}`);
   }
@@ -108,16 +174,19 @@ export const generateWavePoints = (waveParams, waveIndex, padding = 10) => {
 };
 
 // Función auxiliar para calcular colores basados en el tema actual
-export const getThemeColor = (theme, opacity = 1) => {
+export const getThemeColor = (theme, opacity = 1, brightness = 100) => {
+  // Ajustar la luminosidad basada en el brillo
+  const luminosityFactor = brightness / 100;
+  
   switch(theme) {
     case 'green':
-      return `rgba(32, 238, 32, ${opacity})`;
+      return `rgba(${Math.min(255, 32 * luminosityFactor)}, ${Math.min(255, 238 * luminosityFactor)}, ${Math.min(255, 32 * luminosityFactor)}, ${opacity})`;
     case 'amber':
-      return `rgba(255, 149, 0, ${opacity})`;
+      return `rgba(${Math.min(255, 255 * luminosityFactor)}, ${Math.min(255, 149 * luminosityFactor)}, ${Math.min(255, 0 * luminosityFactor)}, ${opacity})`;
     case 'blue':
-      return `rgba(32, 156, 238, ${opacity})`;
+      return `rgba(${Math.min(255, 32 * luminosityFactor)}, ${Math.min(255, 156 * luminosityFactor)}, ${Math.min(255, 238 * luminosityFactor)}, ${opacity})`;
     default:
-      return `rgba(255, 255, 255, ${opacity})`;
+      return `rgba(${Math.min(255, 255 * luminosityFactor)}, ${Math.min(255, 255 * luminosityFactor)}, ${Math.min(255, 255 * luminosityFactor)}, ${opacity})`;
   }
 };
 
@@ -181,7 +250,7 @@ export const generateTextWave = (text, canvas, params) => {
     ...points.filter(p => p.edge === 'bottom').sort((a, b) => b.x - a.x)
   ];
   
-  // Aplicar efectos de distorsión
+  // Aplicar efectos a los puntos
   return sortedPoints.map((point, index) => {
     let { x, y } = point;
     
@@ -194,6 +263,18 @@ export const generateTextWave = (text, canvas, params) => {
     if (params.modulation > 0) {
       const phaseOffset = (index / sortedPoints.length) * Math.PI * 2;
       y += Math.sin(phaseOffset + params.time) * params.modulation * 20;
+    }
+    
+    // Aplicar glitch
+    if (params.glitch > 0 && Math.random() < params.glitch * 0.05) {
+      const glitchAmount = (Math.random() * 2 - 1) * params.glitch * 8;
+      x += glitchAmount;
+    }
+    
+    // Aplicar ruido
+    if (params.noise > 0) {
+      const noiseAmount = (Math.random() * 2 - 1) * params.noise * 2;
+      y += noiseAmount;
     }
     
     return { x, y };

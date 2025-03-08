@@ -24,7 +24,13 @@ const RetroRadioWaveSimulator = () => {
     textWaveData: [],
     displayTheme: 'green',
     showScanline: true,
-    showPersistence: true
+    showPersistence: true,
+    // Nuevos parámetros visuales
+    brightness: 100, // 0-200% (100% es normal)
+    noise: 0,        // 0-100%
+    glitch: 0,       // 0-100%
+    speed: 1,        // 0.1-5x (1x es normal)
+    echo: 0          // 0-100%
   });
   
   // Dimensiones responsive del SVG
@@ -46,14 +52,14 @@ const RetroRadioWaveSimulator = () => {
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
   
-  // Animación - solo activa cuando está encendido
+  // Animación - solo activa cuando está encendido y ahora afectada por la velocidad
   useEffect(() => {
     let timer;
     if (waveParams.powerOn) {
       timer = setInterval(() => {
         setWaveParams(prev => ({
           ...prev,
-          time: (prev.time + 0.1) % 100
+          time: (prev.time + 0.1 * prev.speed) % 100
         }));
       }, 50);
     }
@@ -61,7 +67,7 @@ const RetroRadioWaveSimulator = () => {
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [waveParams.powerOn]);
+  }, [waveParams.powerOn, waveParams.speed]);
   
   // Cambiar tema con el cambio de hue
   useEffect(() => {
@@ -120,10 +126,13 @@ const RetroRadioWaveSimulator = () => {
     }
   };
   
-  // Calcula el color base en formato HSL
+  // Calcula el color base en formato HSL con aplicación de brillo
   const getBaseColor = (waveIndex = 0) => {
     const waveHue = (waveParams.hue + waveIndex * 10) % 360;
-    return `hsl(${waveHue}, ${waveParams.saturation}%, 70%)`;
+    // Aplicar el parámetro de brillo (brightness) al valor de luminosidad
+    const brightness = waveParams.brightness || 100;
+    const luminosity = Math.min(90, 70 * (brightness / 100));
+    return `hsl(${waveHue}, ${waveParams.saturation}%, ${luminosity}%)`;
   };
   
   return (

@@ -3,11 +3,23 @@ import VintageKnob from './controls/VintageKnob';
 import ToggleKnob from './controls/ToggleKnob';
 import PowerKnob from './controls/PowerKnob';
 
+// Función auxiliar para crear secciones de controles
+const ControlSection = ({ title, children }) => (
+  <div className="control-section">
+    <h3 className="section-title">{title}</h3>
+    <div className="section-controls">
+      {children}
+    </div>
+  </div>
+);
+
 const ControlPanel = ({ waveParams, updateParam, handlePowerToggle }) => {
   const { 
     amplitude, frequency, phase, waveCount, hue, saturation, 
     waveform, distortion, harmonics, modulation, tremolo, 
-    powerOn, showScanline, showPersistence
+    powerOn, showScanline, showPersistence,
+    // Nuevos parámetros
+    brightness, noise, glitch, speed, echo
   } = waveParams;
 
   // Obtener el nombre del tipo de onda
@@ -23,8 +35,8 @@ const ControlPanel = ({ waveParams, updateParam, handlePowerToggle }) => {
 
   return (
     <div className="knobs-section">
-      {/* Primera fila de perillas */}
-      <div className="knobs-row">
+      {/* Primera fila: Parámetros principales de la onda */}
+      <div className="knobs-row primary-controls">
         <div className="knob-unit">
           <VintageKnob 
             value={amplitude} 
@@ -77,7 +89,7 @@ const ControlPanel = ({ waveParams, updateParam, handlePowerToggle }) => {
         </div>
       </div>
       
-      {/* Segunda fila de perillas */}
+      {/* Segunda fila: Efectos de onda */}
       <div className="knobs-row">
         <div className="knob-unit">
           <VintageKnob 
@@ -132,8 +144,76 @@ const ControlPanel = ({ waveParams, updateParam, handlePowerToggle }) => {
         </div>
       </div>
       
-      {/* Tercera fila: fase, saturación y efectos */}
+      {/* Tercera fila: Nuevos efectos visuales - primera parte */}
       <div className="knobs-row">
+        <div className="knob-unit">
+          <VintageKnob 
+            value={brightness} 
+            min={10} 
+            max={200} 
+            onChange={(val) => updateParam('brightness', val)} 
+            size={70}
+            label="BRIGHTNESS"
+            disabled={!powerOn}
+          />
+          <div className="knob-value">{brightness.toFixed(0)}%</div>
+        </div>
+        
+        <div className="knob-unit">
+          <VintageKnob 
+            value={noise} 
+            min={0} 
+            max={100} 
+            onChange={(val) => updateParam('noise', val)} 
+            size={70}
+            label="NOISE"
+            disabled={!powerOn}
+          />
+          <div className="knob-value">{noise.toFixed(0)}%</div>
+        </div>
+        
+        <div className="knob-unit">
+          <VintageKnob 
+            value={glitch} 
+            min={0} 
+            max={100} 
+            onChange={(val) => updateParam('glitch', val)} 
+            size={70}
+            label="GLITCH"
+            disabled={!powerOn}
+          />
+          <div className="knob-value">{glitch.toFixed(0)}%</div>
+        </div>
+        
+        <div className="knob-unit">
+          <VintageKnob 
+            value={echo} 
+            min={0} 
+            max={100} 
+            onChange={(val) => updateParam('echo', val)} 
+            size={70}
+            label="ECHO"
+            disabled={!powerOn}
+          />
+          <div className="knob-value">{echo.toFixed(0)}%</div>
+        </div>
+      </div>
+      
+      {/* Cuarta fila: Ajustes adicionales y controles de pantalla */}
+      <div className="knobs-row">
+        <div className="knob-unit">
+          <VintageKnob 
+            value={speed} 
+            min={0.1} 
+            max={5} 
+            onChange={(val) => updateParam('speed', val)} 
+            size={70}
+            label="SPEED"
+            disabled={!powerOn}
+          />
+          <div className="knob-value">{speed.toFixed(1)}x</div>
+        </div>
+        
         <div className="knob-unit">
           <VintageKnob 
             value={phase} 
@@ -157,7 +237,7 @@ const ControlPanel = ({ waveParams, updateParam, handlePowerToggle }) => {
             label="SATURATION"
             disabled={!powerOn}
           />
-          <div className="knob-value">{saturation.toString()}</div>
+          <div className="knob-value">{saturation.toFixed(0)}</div>
         </div>
         
         <div className="effect-controls">

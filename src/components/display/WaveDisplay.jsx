@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { generateWavePoints } from '../Utils/WaveUtils';
+import { generateWavePoints, getThemeColor } from '../Utils/WaveUtils';
 
 // Componente principal de visualización de ondas
 const WaveDisplay = ({ waveParams, getBaseColor, svgRef }) => {
@@ -14,7 +14,12 @@ const WaveDisplay = ({ waveParams, getBaseColor, svgRef }) => {
     showScanline,
     showPersistence,
     time,
-    waveform
+    waveform,
+    // Nuevos parámetros
+    brightness,
+    noise,
+    glitch,
+    echo
   } = waveParams;
   
   const canvasRef = useRef(null);
@@ -63,12 +68,44 @@ const WaveDisplay = ({ waveParams, getBaseColor, svgRef }) => {
             ctx.lineTo(point.x, point.y);
           }
         }
-        ctx.strokeStyle = getBaseColor(0);
+        // Usar el color con brillo ajustado
+        ctx.strokeStyle = getThemeColor(displayTheme, 1, brightness);
         ctx.lineWidth = 2;
         ctx.stroke();
+        
+        // Dibujar eco si está habilitado
+        if (echo > 0) {
+          ctx.beginPath();
+          const echoPoints = generateWavePoints({
+            ...waveParams,
+            svgDimensions: displayDimensions
+          }, 1, 10)
+            .split(' ')
+            .map(point => {
+              const [x, y] = point.split(',');
+              return { x: parseFloat(x), y: parseFloat(y) };
+            });
+          
+          for (let i = 0; i < echoPoints.length; i++) {
+            const point = echoPoints[i];
+            if (i === 0) {
+              ctx.moveTo(point.x, point.y);
+            } else {
+              ctx.lineTo(point.x, point.y);
+            }
+          }
+          
+          // Usar el color con opacidad reducida para el eco
+          ctx.strokeStyle = getThemeColor(displayTheme, 0.5, brightness);
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
       } else {
-        // Dibujar ondas normales
-        for (let i = 0; i < waveCount; i++) {
+        // Calcular cuántas ondas dibujar en total (incluyendo ecos)
+        const totalWaves = echo > 0 ? waveCount * 2 : waveCount;
+        
+        // Dibujar ondas normales y ecos
+        for (let i = 0; i < totalWaves; i++) {
           const points = generateWavePoints({
             ...waveParams,
             svgDimensions: displayDimensions
@@ -88,8 +125,14 @@ const WaveDisplay = ({ waveParams, getBaseColor, svgRef }) => {
             ctx.lineTo(points[j].x, points[j].y);
           }
           
-          ctx.strokeStyle = getBaseColor(i);
-          ctx.lineWidth = 3 - i * 0.3;
+          // Determinar si esta es una onda de eco
+          const isEchoWave = i >= waveCount;
+          
+          // Usar opacidad reducida para ecos
+          const echoOpacity = isEchoWave ? (1 - (i - waveCount) * 0.2) * 0.7 : 1 - i * 0.1;
+          
+          ctx.strokeStyle = getThemeColor(displayTheme, echoOpacity, brightness);
+          ctx.lineWidth = isEchoWave ? 1 : 3 - i * 0.3;
           ctx.stroke();
         }
       }
@@ -108,7 +151,7 @@ const WaveDisplay = ({ waveParams, getBaseColor, svgRef }) => {
     return () => {
       if (animationId) cancelAnimationFrame(animationId);
     };
-  }, [powerOn, waveParams, textWaveMode, textWaveData, showPersistence, displayDimensions, getBaseColor, waveCount]);
+  }, [powerOn, waveParams, textWaveMode, textWaveData, showPersistence, displayDimensions, getBaseColor, waveCount, displayTheme, brightness, echo]);
   
   // Obtener el nombre del tipo de onda
   const getWaveformName = () => {
@@ -119,6 +162,32 @@ const WaveDisplay = ({ waveParams, getBaseColor, svgRef }) => {
       case 3: return "SAWTOOTH WAVE";
       default: return "SINE WAVE";
     }
+  };
+  
+  // Calcular estilos para efectos
+  const getNoiseStyle = () => {
+    if (!powerOn || noise <= 0) return {};
+    
+    return {
+      backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+      opacity: noise * 0.01,
+      mixBlendMode: 'overlay',
+      pointerEvents: 'none'
+    };
+  };
+  
+  const getGlitchStyle = () => {
+    if (!powerOn || glitch <= 0) return {};
+    
+    // Calcular valores aleatorios para transformaciones glitch
+    const randomShift = () => (Math.random() * 2 - 1) * glitch * 0.05;
+    
+    return {
+      animation: glitch > 50 ? 'glitchEffect 0.3s infinite' : 'glitchEffect 0.5s infinite',
+      animationTimingFunction: 'steps(2, end)',
+      transform: `translate(${randomShift()}px, ${randomShift()}px) skew(${randomShift()}deg)`,
+      pointerEvents: 'none'
+    };
   };
   
   return (
@@ -159,33 +228,76 @@ const WaveDisplay = ({ waveParams, getBaseColor, svgRef }) => {
           
           {/* Renderizar ondas solo si no estamos usando persistencia */}
           {(!showPersistence || !powerOn) && !textWaveMode && (
-            Array.from({ length: waveCount }).map((_, index) => (
-              <polyline
-                key={index}
-                points={generateWavePoints({
-                  ...waveParams,
-                  svgDimensions: displayDimensions
-                }, index, 10)}
-                fill="none"
-                stroke={getBaseColor(index)}
-                strokeWidth={3 - index * 0.3}
-                strokeLinecap="round"
-                strokeOpacity={1 - index * 0.1}
-              />
-            ))
+            // Calcular cuántas ondas dibujar en total (incluyendo ecos)
+            Array.from({ length: echo > 0 ? waveCount * 2 : waveCount }).map((_, index) => {
+              // Determinar si esta es una onda de eco
+              const isEchoWave = index >= waveCount;
+              
+              // Usar opacidad reducida para ecos
+              const echoOpacity = isEchoWave ? (1 - (index - waveCount) * 0.2) * 0.7 : 1 - index * 0.1;
+              
+              return (
+                <polyline
+                  key={index}
+                  points={generateWavePoints({
+                    ...waveParams,
+                    svgDimensions: displayDimensions
+                  }, index, 10)}
+                  fill="none"
+                  stroke={getThemeColor(displayTheme, echoOpacity, brightness)}
+                  strokeWidth={isEchoWave ? 1 : 3 - index * 0.3}
+                  strokeLinecap="round"
+                  style={isEchoWave ? {} : getGlitchStyle()}
+                />
+              );
+            })
           )}
           
           {/* Renderizar onda de texto si está en modo texto y no usamos persistencia */}
           {(!showPersistence || !powerOn) && textWaveMode && textWaveData && textWaveData.length > 0 && (
-            <polyline
-              points={textWaveData.map(point => `${point.x},${point.y}`).join(' ')}
-              fill="none"
-              stroke={getBaseColor(0)}
-              strokeWidth={2}
-              strokeLinecap="round"
-            />
+            <>
+              <polyline
+                points={generateWavePoints({
+                  ...waveParams,
+                  svgDimensions: displayDimensions
+                }, 0, 10)}
+                fill="none"
+                stroke={getThemeColor(displayTheme, 1, brightness)}
+                strokeWidth={2}
+                strokeLinecap="round"
+                style={getGlitchStyle()}
+              />
+              
+              {/* Renderizar eco si está habilitado */}
+              {echo > 0 && (
+                <polyline
+                  points={generateWavePoints({
+                    ...waveParams,
+                    svgDimensions: displayDimensions
+                  }, 1, 10)}
+                  fill="none"
+                  stroke={getThemeColor(displayTheme, 0.5, brightness)}
+                  strokeWidth={1.5}
+                  strokeLinecap="round"
+                />
+              )}
+            </>
           )}
         </svg>
+        
+        {/* Efecto de ruido estático */}
+        <div 
+          className="noise-overlay"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 2,
+            ...getNoiseStyle()
+          }}
+        />
         
         {/* Efecto de línea de escaneo */}
         {showScanline && powerOn && (
@@ -197,9 +309,9 @@ const WaveDisplay = ({ waveParams, getBaseColor, svgRef }) => {
               left: 0,
               width: '100%',
               height: '2px',
-              background: 'rgba(255, 255, 255, 0.15)',
-              animation: 'scanAnimation 8s linear infinite',
-              zIndex: 2
+              background: `rgba(255, 255, 255, ${brightness / 200})`,
+              animation: `scanAnimation ${8 / Math.max(0.1, waveParams.speed)}s linear infinite`,
+              zIndex: 3
             }}
           />
         )}
@@ -214,7 +326,7 @@ const WaveDisplay = ({ waveParams, getBaseColor, svgRef }) => {
             right: 0,
             bottom: 0,
             background: 'radial-gradient(circle, transparent 50%, rgba(0, 0, 0, 0.3) 100%)',
-            zIndex: 3,
+            zIndex: 4,
             pointerEvents: 'none'
           }}
         />
