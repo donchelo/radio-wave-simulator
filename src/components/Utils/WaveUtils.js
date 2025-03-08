@@ -15,7 +15,10 @@ export const generateWavePoints = (waveParams, waveIndex, padding = 10) => {
     powerOn,
     textWaveMode,
     textWaveData,
-    svgDimensions
+    svgDimensions,
+    colorSpread,
+    colorMode,
+    afterglow
   } = waveParams;
   
   const { width, height } = svgDimensions;
@@ -24,6 +27,13 @@ export const generateWavePoints = (waveParams, waveIndex, padding = 10) => {
   if (textWaveMode && textWaveData && textWaveData.length > 0) {
     // For multiple waves, only the first shows the text
     if (waveIndex > 0) {
+      // If afterglow is enabled, show echo waves
+      if (afterglow > 0 && waveIndex < 3) {
+        const offset = waveIndex * 3;
+        return textWaveData.map((point) => {
+          return `${point.x + offset},${point.y + offset * 2}`;
+        }).join(' ');
+      }
       return '';
     }
     
@@ -185,19 +195,53 @@ export const generateTextWave = (text, canvas, params) => {
   });
 };
 
-// Function to get color based on theme
-export const getThemeColor = (theme, opacity = 1, brightness = 100) => {
-  // Adjust brightness factor (0-100)
+// Function to get color based on theme and all color parameters
+export const getThemeColor = (theme, opacity = 1, params = {}) => {
+  const { brightness = 100, glow = 0, hue = 120, saturation = 70, colorSpread = 10, waveIndex = 0, colorMode = 'theme' } = params;
+  
+  // Adjust brightness factor (0-200%)
   const brightnessFactor = brightness / 100;
   
-  switch(theme) {
-    case 'green':
-      return `rgba(${32 * brightnessFactor}, ${238 * brightnessFactor}, ${32 * brightnessFactor}, ${opacity})`;
-    case 'amber':
-      return `rgba(${255 * brightnessFactor}, ${149 * brightnessFactor}, ${0 * brightnessFactor}, ${opacity})`;
-    case 'blue':
-      return `rgba(${32 * brightnessFactor}, ${156 * brightnessFactor}, ${238 * brightnessFactor}, ${opacity})`;
-    default:
-      return `rgba(${255 * brightnessFactor}, ${255 * brightnessFactor}, ${255 * brightnessFactor}, ${opacity})`;
+  // Calculate color based on wave index and color mode
+  let waveHue = hue;
+  if (colorMode === 'rainbow') {
+    // Rainbow mode: distribute colors evenly
+    waveHue = (hue + (waveIndex * 30)) % 360;
+  } else {
+    // Normal mode: use color spread
+    waveHue = (hue + (waveIndex * colorSpread)) % 360;
   }
+  
+  // Calculate color with brightness adjustment
+  let r, g, b;
+  
+  // Convert HSL to RGB
+  const h = waveHue / 360;
+  const s = saturation / 100;
+  const l = 0.7 * brightnessFactor; // Limit max brightness
+  
+  const hueToRgb = (p, q, t) => {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1/6) return p + (q - p) * 6 * t;
+    if (t < 1/2) return q;
+    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+    return p;
+  };
+  
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+  
+  r = hueToRgb(p, q, h + 1/3) * 255;
+  g = hueToRgb(p, q, h) * 255;
+  b = hueToRgb(p, q, h - 1/3) * 255;
+  
+  // Add glow effect
+  const glowStyle = glow > 0 ? `filter: blur(${glow * 0.05}px) drop-shadow(0 0 ${glow * 0.1}px rgba(${r}, ${g}, ${b}, ${opacity}))` : '';
+  
+  return {
+    color: `rgba(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)}, ${opacity})`,
+    style: glowStyle,
+    hsl: `hsl(${waveHue}, ${saturation}%, ${l * 100}%)`
+  };
 };

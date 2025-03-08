@@ -24,11 +24,17 @@ const RetroRadioWaveSimulator = () => {
     textWaveData: [],
     displayTheme: 'green',
     // Nuevos parámetros visuales
-    brightness: 100, // 0-200% (100% es normal)
-    noise: 0,        // 0-100%
-    glitch: 0,       // 0-100%
-    speed: 1,        // 0.1-5x (1x es normal)
-    echo: 0          // 0-100%
+    brightness: 100,    // 0-200% (100% es normal)
+    noise: 0,           // 0-100%
+    glitch: 0,          // 0-100%
+    speed: 1,           // 0.1-5x (1x es normal)
+    echo: 0,            // 0-100%
+    // Nuevos parámetros de color
+    colorSpread: 10,    // 0-30 spread between wave colors
+    glow: 0,            // 0-100% glow intensity
+    background: 0,      // 0-100% background darkness
+    afterglow: 0,       // 0-100% afterglow duration
+    colorMode: 'theme'  // 'theme', 'rainbow'
   });
   
   // Dimensiones responsive del SVG
@@ -70,21 +76,27 @@ const RetroRadioWaveSimulator = () => {
   // Cambiar tema con el cambio de hue
   useEffect(() => {
     // Asignar tema basado en el rango de hue
-    const { hue } = waveParams;
-    let theme = waveParams.displayTheme;
-    
-    if (hue >= 90 && hue < 150) {
-      theme = 'green';
-    } else if (hue >= 0 && hue < 60) {
-      theme = 'amber';
-    } else if (hue >= 180 && hue < 270) {
-      theme = 'blue';
+    if (waveParams.colorMode === 'theme') {
+      const { hue } = waveParams;
+      let theme = waveParams.displayTheme;
+      
+      if (hue >= 90 && hue < 150) {
+        theme = 'green';
+      } else if (hue >= 0 && hue < 60) {
+        theme = 'amber';
+      } else if (hue >= 180 && hue < 270) {
+        theme = 'blue';
+      } else if (hue >= 270 && hue < 330) {
+        theme = 'purple';
+      } else {
+        theme = 'teal';
+      }
+      
+      if (theme !== waveParams.displayTheme) {
+        setWaveParams(prev => ({ ...prev, displayTheme: theme }));
+      }
     }
-    
-    if (theme !== waveParams.displayTheme) {
-      setWaveParams(prev => ({ ...prev, displayTheme: theme }));
-    }
-  }, [waveParams.hue]);
+  }, [waveParams.hue, waveParams.colorMode]);
   
   // Función para actualizar cualquier parámetro
   const updateParam = (param, value) => {
@@ -111,11 +123,22 @@ const RetroRadioWaveSimulator = () => {
   
   // Calcula el color base en formato HSL con aplicación de brillo
   const getBaseColor = (waveIndex = 0) => {
-    const waveHue = (waveParams.hue + waveIndex * 10) % 360;
+    const { hue, saturation, brightness, colorSpread, colorMode } = waveParams;
+    
+    let waveHue = hue;
+    if (colorMode === 'rainbow') {
+      // Rainbow mode: distribute colors evenly
+      waveHue = (hue + (waveIndex * 30)) % 360;
+    } else {
+      // Normal mode: use color spread
+      waveHue = (hue + (waveIndex * (colorSpread || 10))) % 360;
+    }
+    
     // Aplicar el parámetro de brillo (brightness) al valor de luminosidad
-    const brightness = waveParams.brightness || 100;
-    const luminosity = Math.min(90, 70 * (brightness / 100));
-    return `hsl(${waveHue}, ${waveParams.saturation}%, ${luminosity}%)`;
+    const brightnessValue = brightness || 100;
+    const luminosity = Math.min(90, 70 * (brightnessValue / 100));
+    
+    return `hsl(${waveHue}, ${saturation}%, ${luminosity}%)`;
   };
   
   return (

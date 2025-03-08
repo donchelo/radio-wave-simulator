@@ -1,0 +1,39 @@
+.color-theme-selector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.selector-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #e8e3d5;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.theme-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.theme-button {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #444;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-button.active {
+  transform: scale(1.2);
+  box-shadow: 0 0 10px currentColor;
+  border-color: #e8e3d5;
+}
+
+.theme-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
