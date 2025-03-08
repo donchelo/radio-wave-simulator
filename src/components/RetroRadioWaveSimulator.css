@@ -1,127 +1,274 @@
-/* Estilos generales para el simulador de radio retro */
-.radio-container {
+/* Estilos base para el simulador de radio retro */
+.radio-wave-simulator {
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  background: #f5f5f5;
 }
 
-.radio-cabinet {
-  width: 100%;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 
-    inset 0 0 30px rgba(0, 0, 0, 0.5), 
-    0 10px 30px rgba(0, 0, 0, 0.4);
-  background-color: #8B4513;
+/* Gabinete del radio */
+.vintage-radio-cabinet {
+  width: 100vw;
+  height: auto;
+  background-color: #432c1a; /* Color madera oscura */
+  display: flex;
+  flex-direction: column;
   position: relative;
   overflow: hidden;
-  background-image: 
-    linear-gradient(30deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0) 100%),
-    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%238B4513" /><rect width="100" height="50" fill="%237A3D11" opacity="0.4" /><path d="M0,0 L100,0 L100,100 L0,100 Z" fill="none" stroke="%23000" stroke-width="0.5" stroke-opacity="0.1" /><path d="M0,50 L100,50" stroke="%23000" stroke-width="0.5" stroke-opacity="0.1" /></svg>');
-  transition: all 0.3s ease;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
 }
 
-/* Estilo de madera con textura */
-.radio-cabinet::before {
-  content: "";
+/* Versión apagada */
+.vintage-radio-cabinet.power-off {
+  background-color: #3a2515;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Parte superior con rejilla y título */
+.radio-speaker-grill {
+  width: 100%;
+  height: 120px;
+  background-color: #e8deb0; /* Color crema claro similar a tu referencia */
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 4px solid #3e2c1c;
+}
+
+/* Líneas de la rejilla */
+.grill-lines {
   position: absolute;
-  inset: 0;
-  opacity: 0.3;
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" stitchTiles="stitch" /></filter><rect width="100" height="100" filter="url(%23noise)" opacity="0.1" /></svg>');
-  background-size: 200px 200px;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 5px,
+    rgba(185, 155, 120, 0.2) 5px,
+    rgba(185, 155, 120, 0.2) 6px
+  );
   pointer-events: none;
 }
 
-/* Estilo cuando está apagado */
-.radio-cabinet.power-off {
-  background-color: #5a3523;
-  box-shadow: 
-    inset 0 0 30px rgba(0, 0, 0, 0.7), 
-    0 5px 15px rgba(0, 0, 0, 0.6);
+/* Título del simulador */
+.radio-title {
+  font-family: 'Arial', sans-serif;
+  font-size: 2.5rem;
+  color: #8b5e3c; /* Marrón medio */
+  text-transform: uppercase;
+  letter-spacing: 0.4em;
+  text-align: center;
+  font-weight: bold;
+  margin: 0;
+  z-index: 2;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-.radio-panel {
-  background-color: #1a1a1a;
-  box-shadow: 
-    inset 0 0 10px rgba(0, 0, 0, 0.8),
-    0 0 5px rgba(0, 0, 0, 0.5);
-  border-radius: 10px;
+/* Panel principal del radio */
+.radio-main-panel {
+  width: 100%;
+  background-color: #34241c; /* Madera oscura */
   padding: 20px;
-  position: relative;
-  border: 2px solid #333;
-}
-
-.radio-layout {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   gap: 20px;
 }
 
-/* Control section (left side) */
-.control-section {
-  flex: 0 0 40%;
-  display: flex;
-  flex-direction: column;
-  padding: 10px;
+/* Sección del visualizador */
+.wave-display-section {
+  width: 100%;
   background-color: #222;
   border-radius: 8px;
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
-}
-
-.radio-name {
-  text-align: center;
-  margin-bottom: 20px;
-  padding: 5px 0;
-  background-color: #111;
-  border-radius: 5px;
-  border: 1px solid #444;
-}
-
-.radio-name span {
-  color: #e8e3d5; 
-  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-  font-size: 1.5rem;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-}
-
-/* Nueva disposición de perillas con grid */
-.knobs-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-gap: 16px;
-  margin-top: 16px;
-}
-
-.knob-cell {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-/* Display section (right side) */
-.display-section {
-  flex: 1;
+  padding: 15px;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.7);
   display: flex;
   flex-direction: column;
-  background-color: #1a1a1a;
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.7);
-  border: 1px solid #333;
+  gap: 10px;
 }
 
-.wave-display-container {
-  width: 100%;
-  flex: 1;
+/* Indicador de modo de onda */
+.wave-mode-indicator {
+  display: flex;
+  justify-content: center;
+  padding: 5px 0;
+}
+
+.mode-text {
+  font-family: 'Arial', sans-serif;
+  font-size: 14px;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Controles de visualización */
+.display-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background-color: #2a2a2a;
+  border-radius: 6px;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+/* Botones de tema */
+.theme-controls {
   display: flex;
   align-items: center;
+}
+
+.theme-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.theme-button {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 1px solid #444;
+  transition: all 0.2s ease;
+}
+
+.theme-button.green {
+  background-color: #20ee20;
+}
+
+.theme-button.amber {
+  background-color: #ff9500;
+}
+
+.theme-button.blue {
+  background-color: #209cee;
+}
+
+.theme-button.active {
+  box-shadow: 0 0 5px currentColor;
+  transform: scale(1.2);
+}
+
+.theme-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Área de entrada de texto */
+.text-input-area {
+  padding: 10px;
+  background-color: #2a2a2a;
+  border-radius: 6px;
+  margin-top: 10px;
+}
+
+/* Sección de perillas */
+.knobs-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 15px;
+  background-color: #34241c; /* Mismo color que el panel principal */
+  border-radius: 6px;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
+}
+
+/* Filas de perillas */
+.knobs-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 15px;
+}
+
+/* Unidad de perilla individual */
+.knob-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  width: 100%;
+  max-width: 100px;
+}
+
+/* Valor de la perilla */
+.knob-value {
+  font-family: 'Digital-7', monospace;
+  font-size: 14px;
+  color: #ddd;
+  background-color: #222;
+  padding: 3px 8px;
+  border-radius: 3px;
+  min-width: 40px;
+  text-align: center;
+}
+
+.knob-value.on {
+  color: #20ee20;
+}
+
+.knob-value.off {
+  color: #ff5555;
+}
+
+/* Controles especiales */
+.special-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
+  width: 100%;
+}
+
+/* Botones de efectos */
+.effect-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.effect-button {
+  padding: 6px 12px;
+  background-color: #333;
+  border: none;
+  border-radius: 4px;
+  color: #ddd;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.effect-button.active {
+  background-color: #555;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+}
+
+.effect-button:hover:not(:disabled) {
+  background-color: #444;
+}
+
+.effect-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Control de encendido */
+.power-control {
   position: relative;
 }
 
+/* Estilos específicos para Wave Display */
 .wave-display {
   width: 100%;
   height: 250px;
@@ -129,179 +276,113 @@
   border-radius: 8px;
   overflow: hidden;
   position: relative;
-  box-shadow: 
-    inset 0 0 15px rgba(0, 0, 0, 0.8),
-    0 0 5px rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8);
   border: 1px solid #444;
   transition: all 0.3s ease;
 }
 
-/* CRT effect */
-.wave-display::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(
-    ellipse at center,
-    rgba(0, 0, 0, 0) 0%,
-    rgba(0, 0, 0, 0.3) 80%,
-    rgba(0, 0, 0, 0.5) 100%
-  );
-  pointer-events: none;
-  z-index: 2;
+/* Theme colors for wave display */
+.wave-display.green {
+  box-shadow: inset 0 0 15px rgba(32, 238, 32, 0.2);
 }
 
-/* Scanline effect */
-.wave-display::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    rgba(0, 0, 0, 0.1),
-    rgba(0, 0, 0, 0.1) 1px,
-    transparent 1px,
-    transparent 2px
-  );
-  pointer-events: none;
-  z-index: 3;
-  opacity: 0.3;
+.wave-display.amber {
+  box-shadow: inset 0 0 15px rgba(255, 149, 0, 0.2);
 }
 
-/* Estilo del visualizador cuando está apagado */
+.wave-display.blue {
+  box-shadow: inset 0 0 15px rgba(32, 156, 238, 0.2);
+}
+
+/* Powered off state */
 .wave-display.powered-off {
   background-color: #0a0a0a;
   box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.8);
   opacity: 0.7;
 }
 
-.wave-mode-selector {
-  display: flex;
-  justify-content: center;
-  margin: 16px 0;
+/* Scan line effect */
+.scan-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(
+    to bottom,
+    rgba(32, 156, 238, 0.3),
+    rgba(32, 156, 238, 0.1)
+  );
+  z-index: 2;
+  pointer-events: none;
+  animation: scanAnimation 4s linear infinite;
 }
 
-.waveform-indicator {
-  display: flex;
-  justify-content: center;
-  margin-top: 16px;
+@keyframes scanAnimation {
+  0% {
+    top: 0;
+  }
+  100% {
+    top: 100%;
+  }
 }
 
-.waveform-indicator div {
-  padding: 6px 14px;
-  border-radius: 4px;
-  background-color: #333;
-  color: #e8e3d5;
-  font-size: 0.85rem;
-  letter-spacing: 0.1em;
-  border: 1px solid #555;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+/* Canvas persistence effect */
+.persistence-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  opacity: 0.8;
+  pointer-events: none;
 }
 
-.power-off .waveform-indicator div {
-  background-color: #2a2a2a;
-  color: #a09a8c;
-}
-
-/* Text to wave module */
-.text-to-letter-wave {
-  margin-top: 16px;
-  padding: 12px;
-  border-radius: 8px;
-  background-color: #2a2a2a;
-  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6);
-  border: 1px solid #444;
-  transition: all 0.3s ease;
-}
-
-.text-to-letter-wave.powered-off {
-  opacity: 0.6;
-  background-color: #222;
-}
-
-.text-input-container {
-  display: flex;
-  gap: 12px;
-}
-
-.wave-text-input {
-  flex: 1;
-  padding: 8px 12px;
-  border-radius: 4px;
-  border: 1px solid #555;
-  background-color: #111;
-  color: #e8e3d5;
-  font-family: monospace;
-  font-size: 16px;
-  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
-  transition: all 0.3s ease;
-}
-
-.wave-text-input:focus {
-  outline: none;
-  border-color: #777;
-  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5), 0 0 5px rgba(232, 227, 213, 0.3);
-}
-
-.generate-wave-btn {
-  padding: 8px 16px;
-  border-radius: 4px;
-  border: none;
-  background-color: #8B4513;
-  color: #e8e3d5;
-  font-family: inherit;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-  transition: all 0.3s ease;
-}
-
-.generate-wave-btn:hover:not(:disabled) {
-  background-color: #a05419;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
-}
-
-/* Responsive adjustments */
-@media (max-width: 1200px) {
-  .radio-layout {
-    flex-direction: column;
+/* Ajustes responsive */
+@media (min-width: 1200px) {
+  .radio-main-panel {
+    flex-direction: row;
+    align-items: flex-start;
   }
   
-  .control-section {
-    flex: auto;
-    order: 2;
+  .wave-display-section {
+    flex: 3;
+    margin-right: 20px;
   }
   
-  .display-section {
-    flex: auto;
-    order: 1;
-    min-height: 350px;
+  .knobs-section {
+    flex: 2;
+  }
+}
+
+@media (max-width: 1024px) {
+  .knobs-row {
+    flex-wrap: wrap;
   }
   
-  .knobs-grid {
-    grid-template-columns: repeat(3, 1fr);
+  .knob-unit {
+    width: calc(25% - 15px);
+  }
+  
+  .radio-title {
+    font-size: 2rem;
+    letter-spacing: 0.3em;
   }
 }
 
 @media (max-width: 768px) {
-  .knobs-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .radio-speaker-grill {
+    height: 80px;
   }
   
-  .radio-cabinet {
-    padding: 15px;
+  .radio-title {
+    font-size: 1.5rem;
+    letter-spacing: 0.2em;
   }
   
-  .radio-panel {
-    padding: 15px;
+  .knob-unit {
+    width: calc(33.33% - 10px);
   }
   
   .wave-display {
@@ -309,17 +390,22 @@
   }
 }
 
-@media (max-width: 480px) {
-  .knobs-grid {
-    grid-template-columns: repeat(2, 1fr);
-    grid-gap: 10px;
+@media (max-width: 576px) {
+  .knob-unit {
+    width: calc(50% - 10px);
   }
   
-  .text-input-container {
+  .radio-title {
+    font-size: 1.2rem;
+    letter-spacing: 0.1em;
+  }
+  
+  .radio-speaker-grill {
+    height: 60px;
+  }
+  
+  .effect-buttons {
     flex-direction: column;
-  }
-  
-  .wave-display {
-    height: 150px;
+    gap: 5px;
   }
 }

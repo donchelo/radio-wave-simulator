@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import ControlPanel from './ControlPanel';
+import VintageKnob from './controls/VintageKnob';
+import ToggleKnob from './controls/ToggleKnob';
 import WaveDisplay from './display/WaveDisplay';
 import WaveModeSelector from './display/WaveModeSelector';
 import TextToLetterWave from './text-to-wave/TextToLetterWave';
@@ -137,7 +138,8 @@ const RetroRadioWaveSimulator = () => {
     svgDimensions,
     displayTheme,
     showScanline,
-    showPersistence
+    showPersistence,
+    handleWaveModeToggle
   };
   
   // Agrupar funciones de actualización
@@ -158,26 +160,54 @@ const RetroRadioWaveSimulator = () => {
     toggleDisplayEffect
   };
   
+  // Obtener el nombre del tipo de onda
+  const getWaveformName = () => {
+    const waveformIndex = Math.floor(waveform * 4);
+    switch(waveformIndex) {
+      case 1: return "SQUARE";
+      case 2: return "TRIANGLE";
+      case 3: return "SAWTOOTH";
+      default: return "SINE";
+    }
+  };
+  
   return (
-    <div className="radio-container">
-      <div className={`radio-cabinet ${!powerOn ? 'power-off' : ''}`}>
-        <div className="radio-panel">
-          <div className="radio-layout">
-            {/* Sección izquierda - Controles */}
-            <ControlPanel 
-              waveParams={waveParams} 
-              setters={setterFunctions} 
+    <div className="radio-wave-simulator">
+      <div className={`vintage-radio-cabinet ${!powerOn ? 'power-off' : ''}`}>
+        {/* Parte superior con rejilla y título */}
+        <div className="radio-speaker-grill">
+          <div className="grill-lines"></div>
+          <h2 className="radio-title">WAVE SIMULATOR</h2>
+        </div>
+        
+        {/* Sección central con visualizador y perillas */}
+        <div className="radio-main-panel">
+          {/* Área de visualización */}
+          <div className="wave-display-section">
+            <WaveDisplay 
+              waveParams={waveParams}
+              getBaseColor={getBaseColor}
+              svgRef={svgRef}
             />
             
-            {/* Sección derecha - Visualizador */}
-            <div className="display-section">
-              <WaveDisplay 
-                waveParams={waveParams}
-                getBaseColor={getBaseColor}
-                svgRef={svgRef}
+            {/* Indicador de modo de onda */}
+            <div className="wave-mode-indicator">
+              {powerOn && (
+                <span className="mode-text">
+                  {textWaveMode ? "TEXT WAVE" : getWaveformName() + " WAVE"}
+                </span>
+              )}
+            </div>
+            
+            {/* Controles de visualización */}
+            <div className="display-controls">
+              <WaveModeSelector
+                textWaveMode={textWaveMode}
+                powerOn={powerOn}
+                onToggle={handleWaveModeToggle}
               />
               
-              <div className="display-controls">
+              <div className="theme-controls">
                 <div className="theme-buttons">
                   <button 
                     className={`theme-button green ${displayTheme === 'green' ? 'active' : ''}`}
@@ -198,58 +228,191 @@ const RetroRadioWaveSimulator = () => {
                     title="Blue Theme"
                   ></button>
                 </div>
-                
-                <div className="display-toggles">
+              </div>
+            </div>
+            
+            {/* Entrada de texto cuando está en modo texto */}
+            {textWaveMode && (
+              <div className="text-input-area">
+                <TextToLetterWave 
+                  waveParams={waveParams}
+                  onTextWaveGenerated={handleTextWaveGenerated}
+                  powerOn={powerOn}
+                  width={svgDimensions.width}
+                  height={svgDimensions.height}
+                />
+              </div>
+            )}
+          </div>
+          
+          {/* Área de perillas/controles */}
+          <div className="knobs-section">
+            {/* Primera fila de perillas */}
+            <div className="knobs-row">
+              <div className="knob-unit">
+                <VintageKnob 
+                  value={amplitude} 
+                  min={10} 
+                  max={150} 
+                  onChange={setAmplitude} 
+                  size={70}
+                  label="AMPLITUDE"
+                  disabled={!powerOn}
+                />
+                <div className="knob-value">{amplitude}</div>
+              </div>
+              
+              <div className="knob-unit">
+                <VintageKnob 
+                  value={frequency} 
+                  min={0.5} 
+                  max={5} 
+                  onChange={setFrequency} 
+                  size={70}
+                  label="FREQUENCY"
+                  disabled={!powerOn}
+                />
+                <div className="knob-value">{frequency.toFixed(2)}</div>
+              </div>
+              
+              <div className="knob-unit">
+                <ToggleKnob 
+                  value={Math.floor(waveform * 4)} 
+                  options={['SINE', 'SQUARE', 'TRIANGLE', 'SAW']}
+                  onChange={(val) => setWaveform(val / 3)} 
+                  size={70}
+                  label="WAVEFORM"
+                  disabled={!powerOn}
+                />
+                <div className="knob-value">{getWaveformName()}</div>
+              </div>
+              
+              <div className="knob-unit">
+                <VintageKnob 
+                  value={waveCount} 
+                  min={1} 
+                  max={8} 
+                  onChange={(val) => setWaveCount(Math.floor(val))} 
+                  size={70}
+                  label="LAYERS"
+                  disabled={!powerOn}
+                />
+                <div className="knob-value">{waveCount}</div>
+              </div>
+            </div>
+            
+            {/* Segunda fila de perillas */}
+            <div className="knobs-row">
+              <div className="knob-unit">
+                <VintageKnob 
+                  value={distortion} 
+                  min={0} 
+                  max={1} 
+                  onChange={setDistortion} 
+                  size={70}
+                  label="DISTORTION"
+                  disabled={!powerOn}
+                />
+                <div className="knob-value">{distortion.toFixed(2)}</div>
+              </div>
+              
+              <div className="knob-unit">
+                <VintageKnob 
+                  value={harmonics} 
+                  min={0} 
+                  max={1} 
+                  onChange={setHarmonics} 
+                  size={70}
+                  label="HARMONICS"
+                  disabled={!powerOn}
+                />
+                <div className="knob-value">{harmonics.toFixed(2)}</div>
+              </div>
+              
+              <div className="knob-unit">
+                <VintageKnob 
+                  value={tremolo} 
+                  min={0} 
+                  max={1} 
+                  onChange={setTremolo} 
+                  size={70}
+                  label="TREMOLO"
+                  disabled={!powerOn}
+                />
+                <div className="knob-value">{tremolo.toFixed(2)}</div>
+              </div>
+              
+              <div className="knob-unit">
+                <VintageKnob 
+                  value={modulation} 
+                  min={0} 
+                  max={1} 
+                  onChange={setModulation} 
+                  size={70}
+                  label="MODULATION"
+                  disabled={!powerOn}
+                />
+                <div className="knob-value">{modulation.toFixed(2)}</div>
+              </div>
+            </div>
+            
+            {/* Tercera fila de perillas y controles */}
+            <div className="knobs-row">
+              <div className="knob-unit">
+                <VintageKnob 
+                  value={phase} 
+                  min={0} 
+                  max={6.28} 
+                  onChange={setPhase} 
+                  size={70}
+                  label="PHASE"
+                  disabled={!powerOn}
+                />
+                <div className="knob-value">{phase.toFixed(2)}</div>
+              </div>
+              
+              <div className="knob-unit">
+                <VintageKnob 
+                  value={saturation} 
+                  min={0} 
+                  max={100} 
+                  onChange={setSaturation} 
+                  size={70}
+                  label="SATURATION"
+                  disabled={!powerOn}
+                />
+                <div className="knob-value">{saturation}</div>
+              </div>
+              
+              <div className="special-controls">
+                <div className="effect-buttons">
                   <button 
-                    className={`display-toggle ${showScanline ? 'active' : ''}`}
+                    className={`effect-button ${showScanline ? 'active' : ''}`}
                     onClick={() => toggleDisplayEffect('scanline')}
                     disabled={!powerOn}
-                    title="Toggle Scanline Effect"
                   >
                     SCAN
                   </button>
                   <button 
-                    className={`display-toggle ${showPersistence ? 'active' : ''}`}
+                    className={`effect-button ${showPersistence ? 'active' : ''}`}
                     onClick={() => toggleDisplayEffect('persistence')}
                     disabled={!powerOn}
-                    title="Toggle Persistence Effect"
                   >
                     PERSIST
                   </button>
                 </div>
               </div>
               
-              <WaveModeSelector
-                textWaveMode={textWaveMode}
-                powerOn={powerOn}
-                onToggle={handleWaveModeToggle}
-              />
-              
-              {/* Módulo de texto a onda */}
-              <TextToLetterWave 
-                waveParams={waveParams}
-                onTextWaveGenerated={handleTextWaveGenerated}
-                powerOn={powerOn}
-                width={svgDimensions.width}
-                height={svgDimensions.height}
-              />
-              
-              <div className="waveform-indicator">
-                <div>
-                  {powerOn && (
-                    <>
-                      {textWaveMode ? "TEXT WAVE" : (
-                        <>
-                          {Math.floor(waveform * 4) === 0 && "SINE WAVE"}
-                          {Math.floor(waveform * 4) === 1 && "SQUARE WAVE"}
-                          {Math.floor(waveform * 4) === 2 && "TRIANGLE WAVE"}
-                          {Math.floor(waveform * 4) === 3 && "SAWTOOTH WAVE"}
-                        </>
-                      )}
-                    </>
-                  )}
-                  {!powerOn && "STANDBY"}
-                </div>
+              <div className="knob-unit power-control">
+                <ToggleKnob 
+                  value={powerOn ? 1 : 0} 
+                  options={['OFF', 'ON']}
+                  onChange={handlePowerToggle} 
+                  size={70}
+                  label="POWER"
+                  highlight={true}
+                />
+                <div className={`knob-value ${powerOn ? 'on' : 'off'}`}>{powerOn ? "ON" : "OFF"}</div>
               </div>
             </div>
           </div>

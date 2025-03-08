@@ -1,386 +1,291 @@
-.ultimate-wave-display-container {
-    width: 100%;
-    position: relative;
-  }
-  
-  .ultimate-wave-display {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    border-radius: 12px;
-    overflow: hidden;
-    background-color: #0a0a0a;
-    box-shadow: 
-      inset 0 0 10px rgba(0, 0, 0, 0.8),
-      0 0 15px rgba(0, 0, 0, 0.7);
-    padding: 16px;
-    transition: all 0.3s ease;
-  }
-  
-  /* Theme variations */
-  .ultimate-wave-display.theme-green {
-    background-color: #080808;
-    box-shadow: 
-      inset 0 0 10px rgba(0, 0, 0, 0.8),
-      0 0 20px rgba(32, 238, 32, 0.2);
-  }
-  
-  .ultimate-wave-display.theme-amber {
-    background-color: #080808;
-    box-shadow: 
-      inset 0 0 10px rgba(0, 0, 0, 0.8),
-      0 0 20px rgba(255, 149, 0, 0.2);
-  }
-  
-  .ultimate-wave-display.theme-blue {
-    background-color: #080808;
-    box-shadow: 
-      inset 0 0 10px rgba(0, 0, 0, 0.8),
-      0 0 20px rgba(32, 156, 238, 0.2);
-  }
-  
-  /* Wave SVG container */
-  .wave-svg-container {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    border-radius: 8px;
-    background-color: rgba(0, 0, 0, 0.9);
-    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
-    z-index: 1;
-  }
-  
-  /* Center line styling */
-  .theme-green .center-line {
-    stroke: rgba(32, 238, 32, 0.4);
-  }
-  
-  .theme-amber .center-line {
-    stroke: rgba(255, 149, 0, 0.4);
-  }
-  
-  .theme-blue .center-line {
-    stroke: rgba(32, 156, 238, 0.4);
-  }
-  
-  /* Wave path styling */
-  .wave-path {
-    vector-effect: non-scaling-stroke;
-    transition: all 0.3s ease;
-  }
-  
-  .theme-green .wave-path {
-    stroke: #20ee20;
-  }
-  
-  .theme-amber .wave-path {
-    stroke: #ff9500;
-  }
-  
-  .theme-blue .wave-path {
-    stroke: #209cee;
-  }
-  
-  /* Scan line effect */
-  .scan-line {
-    position: absolute;
+/* Contenedor principal */
+.oscilloscope-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* Visualizador de osciloscópio */
+.oscilloscope-display {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  max-width: 900px;
+  background-color: #181818;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+/* Pantalla de visualización de ondas */
+.wave-screen {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  overflow: hidden;
+  background-color: #000;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+  transition: all 0.3s ease;
+}
+
+.wave-screen.powered-off {
+  background-color: #0a0a0a;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.9);
+}
+
+/* Contenedor SVG para visualización de ondas */
+.wave-svg-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* Canvas para efecto de persistencia */
+.persistence-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+/* Efecto de línea de escaneo */
+.scan-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(
+    to bottom,
+    rgba(32, 156, 238, 0.3),
+    rgba(32, 156, 238, 0.1)
+  );
+  z-index: 2;
+  pointer-events: none;
+  animation: scanAnimation 4s linear infinite;
+}
+
+@keyframes scanAnimation {
+  0% {
     top: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    background: linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.15),
-      rgba(255, 255, 255, 0.05)
+  }
+  100% {
+    top: 100%;
+  }
+}
+
+/* Efecto overlay CRT */
+.crt-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(
+      circle at center,
+      transparent 50%,
+      rgba(0, 0, 0, 0.3) 100%
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.1),
+      rgba(0, 0, 0, 0.1) 1px,
+      transparent 1px,
+      transparent 2px
     );
-    z-index: 2;
-    opacity: 0;
-    pointer-events: none;
-  }
-  
-  .scan-line.active {
-    opacity: 1;
-    animation: scanAnimation 8s linear infinite;
-  }
-  
-  @keyframes scanAnimation {
-    0% {
-      top: 0;
-    }
-    100% {
-      top: 100%;
-    }
-  }
-  
-  /* CRT overlay effect */
-  .crt-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: 
-      radial-gradient(
-        circle at center,
-        transparent 50%,
-        rgba(0, 0, 0, 0.3) 100%
-      ),
-      repeating-linear-gradient(
-        0deg,
-        rgba(0, 0, 0, 0.1),
-        rgba(0, 0, 0, 0.1) 1px,
-        transparent 1px,
-        transparent 2px
-      );
-    pointer-events: none;
-    z-index: 3;
-  }
-  
-  /* Persistence canvas */
-  .persistence-canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-    opacity: 0.7;
-    pointer-events: none;
-  }
-  
-  /* Power off state */
-  .ultimate-wave-display.powered-off {
-    background-color: #0a0a0a;
-    box-shadow: 
-      inset 0 0 10px rgba(0, 0, 0, 0.9),
-      0 0 10px rgba(0, 0, 0, 0.5);
-  }
-  
-  .power-screen {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.9);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.5s ease;
-  }
-  
-  .power-screen.visible {
-    opacity: 1;
-  }
-  
-  .power-text {
-    font-family: 'Courier New', monospace;
-    font-size: 24px;
-    font-weight: bold;
-    color: rgba(180, 180, 180, 0.2);
-    letter-spacing: 0.2em;
-    text-shadow: 0 0 5px rgba(150, 150, 150, 0.2);
-  }
-  
-  /* Display controls */
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Pantalla de apagado */
+.power-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.power-text {
+  font-family: 'Courier New', monospace;
+  font-size: 24px;
+  font-weight: bold;
+  color: rgba(140, 140, 140, 0.2);
+  letter-spacing: 0.2em;
+  text-shadow: 0 0 5px rgba(100, 100, 100, 0.2);
+}
+
+/* Controles bajo la pantalla */
+.display-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #111;
+  padding: 10px 20px;
+  border-top: 1px solid #333;
+}
+
+.left-controls, .center-controls, .right-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.parameter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.parameter span {
+  font-size: 12px;
+  color: #aaa;
+  font-family: 'Arial', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Botones de control */
+.control-button {
+  padding: 5px 12px;
+  font-size: 11px;
+  background-color: #222;
+  color: #aaa;
+  border: 1px solid #333;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: 'Arial', sans-serif;
+}
+
+.control-button:hover:not(:disabled) {
+  background-color: #333;
+  color: #ddd;
+}
+
+.control-button.active {
+  background-color: #444;
+  border-color: #555;
+  color: #fff;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+.control-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Selector de modo de onda */
+.wave-mode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.mode-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mode-selector span {
+  font-size: 11px;
+  color: #777;
+  text-transform: uppercase;
+  font-family: 'Arial', sans-serif;
+  transition: color 0.2s ease;
+}
+
+.mode-selector span.active {
+  color: #209cee;
+}
+
+/* Estilo para el toggle switch */
+.toggle-container {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 18px;
+}
+
+.toggle-container input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #333;
+  border-radius: 18px;
+  transition: .3s;
+}
+
+.toggle:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 2px;
+  bottom: 2px;
+  background-color: #aaa;
+  border-radius: 50%;
+  transition: .3s;
+}
+
+input:checked + .toggle {
+  background-color: #444;
+}
+
+input:checked + .toggle:before {
+  transform: translateX(18px);
+  background-color: #209cee;
+}
+
+input:disabled + .toggle {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Ajustes responsivos */
+@media (max-width: 768px) {
   .display-controls {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    display: flex;
     flex-direction: column;
-    gap: 8px;
-    z-index: 5;
+    gap: 15px;
+    padding: 15px 10px;
   }
   
-  .theme-buttons {
-    display: flex;
-    gap: 4px;
-  }
-  
-  .theme-button {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    border: 1px solid #333;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-  
-  .theme-button.green {
-    background-color: #20ee20;
-  }
-  
-  .theme-button.amber {
-    background-color: #ff9500;
-  }
-  
-  .theme-button.blue {
-    background-color: #209cee;
-  }
-  
-  .theme-button.active {
-    box-shadow: 0 0 5px currentColor;
-    transform: scale(1.2);
-  }
-  
-  .theme-button:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-  }
-  
-  .display-toggles {
-    display: flex;
-    gap: 4px;
-  }
-  
-  .display-toggle {
-    padding: 2px 4px;
-    font-size: 8px;
-    background-color: #333;
-    color: #ddd;
-    border: none;
-    border-radius: 2px;
-    cursor: pointer;
-    font-family: 'Courier New', monospace;
-    transition: all 0.3s ease;
-  }
-  
-  .display-toggle.active {
-    background-color: #555;
-    box-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
-  }
-  
-  .display-toggle:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-  }
-  
-  /* Indicators */
-  .wave-indicators {
-    position: absolute;
-    left: 8px;
-    top: 8px;
-    display: flex;
-    gap: 16px;
-    z-index: 5;
-  }
-  
-  .amplitude-indicator,
-  .frequency-indicator {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-  }
-  
-  .indicator-label {
-    font-size: 8px;
-    font-family: 'Courier New', monospace;
-    color: #ddd;
-  }
-  
-  .indicator-bar-container {
-    width: 8px;
-    height: 60px;
-    background-color: #222;
-    border-radius: 2px;
-    overflow: hidden;
-    position: relative;
-  }
-  
-  .indicator-bar {
-    position: absolute;
-    bottom: 0;
+  .left-controls, .center-controls, .right-controls {
     width: 100%;
-    background-color: #eee;
-    transition: height 0.3s ease;
+    justify-content: center;
   }
   
-  .theme-green .indicator-bar {
-    background-color: #20ee20;
-    box-shadow: 0 0 5px #20ee20;
+  .wave-screen {
+    height: 220px;
   }
   
-  .theme-amber .indicator-bar {
-    background-color: #ff9500;
-    box-shadow: 0 0 5px #ff9500;
+  .control-button {
+    padding: 4px 8px;
+    font-size: 10px;
   }
-  
-  .theme-blue .indicator-bar {
-    background-color: #209cee;
-    box-shadow: 0 0 5px #209cee;
-  }
-  
-  /* Scale markings */
-  .scale-markings {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    z-index: 4;
-  }
-  
-  .horizontal-scale {
-    position: absolute;
-    bottom: 4px;
-    left: 20px;
-    right: 20px;
-    height: 16px;
-    display: flex;
-    justify-content: space-between;
-  }
-  
-  .vertical-scale {
-    position: absolute;
-    left: 4px;
-    top: 20px;
-    bottom: 20px;
-    width: 16px;
-  }
-  
-  .scale-mark {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .vertical-scale .scale-mark {
-    position: absolute;
-    left: 0;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-  }
-  
-  .scale-tick {
-    width: 6px;
-    height: 1px;
-    background-color: rgba(200, 200, 200, 0.5);
-  }
-  
-  .vertical-scale .scale-tick {
-    width: 1px;
-    height: 6px;
-  }
-  
-  .scale-value {
-    font-size: 7px;
-    color: rgba(200, 200, 200, 0.7);
-    font-family: 'Courier New', monospace;
-  }
-  
-  /* Responsive adjustments */
-  @media (max-width: 768px) {
-    .display-controls {
-      flex-direction: row;
-    }
-    
-    .theme-buttons {
-      flex-direction: column;
-    }
-  }
+}
