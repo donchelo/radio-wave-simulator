@@ -16,7 +16,7 @@ const VintageKnob = ({
   const [startPosition, setStartPosition] = useState({ x: 0, y: 0 });
   const [knobRotation, setKnobRotation] = useState(getRotationFromValue(value));
   const [hoverState, setHoverState] = useState(false);
-  const [dragType, setDragType] = useState('vertical'); // 'vertical' or 'rotational'
+  const [dragType, setDragType] = useState('rotational'); // Cambiado a 'rotational' por defecto
   
   // Convert value to rotation angle
   function getRotationFromValue(val) {
@@ -44,38 +44,17 @@ const VintageKnob = ({
     const knobCenterX = knobRect.left + knobRect.width / 2;
     const knobCenterY = knobRect.top + knobRect.height / 2;
     
-    if (dragType === 'rotational') {
-      // Rotational control (like turning an actual knob)
-      const angle = Math.atan2(clientY - knobCenterY, clientX - knobCenterX) * (180 / Math.PI);
-      // Convert angle to -135 to 135 range
-      let newRotation = angle + 90; // Adjust to make "up" position the starting point
-      if (newRotation > 180) newRotation -= 360;
-      
-      // Clamp to -135 to 135 range
-      newRotation = Math.max(-135, Math.min(135, newRotation));
-      setKnobRotation(newRotation);
-      
-      return getValueFromRotation(newRotation);
-    } 
-    else {
-      // Vertical movement (more precise)
-      const deltaY = startPosition.y - clientY;
-      
-      // Apply sensitivity factor (lower = more subtle movement)
-      const adjustedDeltaY = deltaY * sensitivity;
-      
-      // Scale sensitivity based on range size
-      const range = max - min;
-      const valueChange = (adjustedDeltaY / 200) * range;
-      
-      // Calculate new value and clamp it
-      const newValue = Math.max(min, Math.min(max, value + valueChange));
-      
-      // Update knob rotation for visual feedback
-      setKnobRotation(getRotationFromValue(newValue));
-      
-      return newValue;
-    }
+    // Siempre usar el control rotacional como en ColorKnob
+    const angle = Math.atan2(clientY - knobCenterY, clientX - knobCenterX) * (180 / Math.PI);
+    // Convert angle to -135 to 135 range
+    let newRotation = angle + 90; // Adjust to make "up" position the starting point
+    if (newRotation > 180) newRotation -= 360;
+    
+    // Clamp to -135 to 135 range
+    newRotation = Math.max(-135, Math.min(135, newRotation));
+    setKnobRotation(newRotation);
+    
+    return getValueFromRotation(newRotation);
   };
 
   // Handle mouse events
@@ -85,8 +64,8 @@ const VintageKnob = ({
     e.preventDefault();
     const { clientX, clientY } = e;
     
-    // Determine drag type based on modifier keys
-    setDragType(e.altKey ? 'rotational' : 'vertical');
+    // Siempre usar modo rotacional (como una manito girando la perilla)
+    setDragType('rotational');
     
     setIsDragging(true);
     setStartPosition({ x: clientX, y: clientY });
@@ -100,13 +79,17 @@ const VintageKnob = ({
     
     const newValue = calculateValueChange(e.clientX, e.clientY);
     
-    // Only update if value actually changed
+    // Solo actualizar si el valor realmente cambió
     if (newValue !== value) {
-      // Round to 2 decimal places for smoother updates
-      onChange(parseFloat(newValue.toFixed(2)));
+      // Redondear según el tipo de parámetro
+      const roundedValue = Number.isInteger(min) && Number.isInteger(max) ? 
+        Math.round(newValue) : 
+        parseFloat(newValue.toFixed(2));
+        
+      onChange(roundedValue);
     }
     
-    // Update start position for next movement calculation
+    // Actualizar posición inicial para el siguiente movimiento
     setStartPosition({ x: e.clientX, y: e.clientY });
   };
   
@@ -131,7 +114,12 @@ const VintageKnob = ({
     const newValue = calculateValueChange(touch.clientX, touch.clientY);
     
     if (newValue !== value) {
-      onChange(parseFloat(newValue.toFixed(2)));
+      // Redondear según el tipo de parámetro
+      const roundedValue = Number.isInteger(min) && Number.isInteger(max) ? 
+        Math.round(newValue) : 
+        parseFloat(newValue.toFixed(2));
+        
+      onChange(roundedValue);
     }
     
     setStartPosition({ x: touch.clientX, y: touch.clientY });
@@ -141,40 +129,47 @@ const VintageKnob = ({
   const handleKeyDown = (e) => {
     if (disabled) return;
     
-    let newValue = value;
-    const step = (max - min) / 100; // 100 steps for fine control
+    let newRotation = knobRotation;
+    const rotationStep = 3; // 3 grados por pulsación de tecla
     
     switch (e.key) {
       case 'ArrowUp':
       case 'ArrowRight':
-        newValue = Math.min(max, value + step);
+        newRotation = Math.min(135, knobRotation + rotationStep);
         break;
       case 'ArrowDown':
       case 'ArrowLeft':
-        newValue = Math.max(min, value - step);
+        newRotation = Math.max(-135, knobRotation - rotationStep);
         break;
       case 'Home':
-        newValue = min;
+        newRotation = -135; // Valor mínimo
         break;
       case 'End':
-        newValue = max;
+        newRotation = 135; // Valor máximo
         break;
       case 'PageUp':
-        newValue = Math.min(max, value + step * 10);
+        newRotation = Math.min(135, knobRotation + rotationStep * 3);
         break;
       case 'PageDown':
-        newValue = Math.max(min, value - step * 10);
+        newRotation = Math.max(-135, knobRotation - rotationStep * 3);
         break;
       default:
-        return; // Exit for other keys
+        return; // Salir para otras teclas
     }
     
-    if (newValue !== value) {
-      onChange(parseFloat(newValue.toFixed(2)));
-      setKnobRotation(getRotationFromValue(newValue));
+    if (newRotation !== knobRotation) {
+      const newValue = getValueFromRotation(newRotation);
+      
+      // Redondear según el tipo de parámetro
+      const roundedValue = Number.isInteger(min) && Number.isInteger(max) ? 
+        Math.round(newValue) : 
+        parseFloat(newValue.toFixed(2));
+        
+      onChange(roundedValue);
+      setKnobRotation(newRotation);
     }
     
-    e.preventDefault(); // Prevent page scrolling
+    e.preventDefault(); // Prevenir el desplazamiento de la página
   };
 
   // Set up and clean up global event listeners
@@ -197,15 +192,16 @@ const VintageKnob = ({
   // Generate position markers
   const renderMarkers = () => {
     const markers = [];
-    const markerCount = 9; // More markers for better visual feedback
+    // Reducir ligeramente la cantidad de marcadores para un diseño más limpio
+    const markerCount = 7; // En lugar de 9 
     
     for (let i = 0; i < markerCount; i++) {
       const percentage = i / (markerCount - 1);
       const angle = percentage * 270 - 135; // -135° to 135°
       const radians = (angle * Math.PI) / 180;
       
-      // Calculate marker position
-      const radius = size / 2 + 4;
+      // Colocar los marcadores a una distancia uniforme de la perilla
+      const radius = size / 2 + 3; // Consistente y cercano a la perilla
       const x = Math.sin(radians) * radius;
       const y = -Math.cos(radians) * radius;
       
@@ -213,12 +209,14 @@ const VintageKnob = ({
       const markerValue = min + percentage * (max - min);
       const isActive = value >= markerValue;
       
+      // Usar el mismo sistema de coordenadas que los números
       markers.push(
         <div 
           key={i}
           className={`knob-marker ${isActive ? 'active' : ''}`}
           style={{
             transform: `translate(${x}px, ${y}px)`,
+            opacity: isActive ? 0.9 : 0.5 // Mejor contraste
           }}
         />
       );
@@ -242,32 +240,37 @@ const VintageKnob = ({
       
       // Formatear el valor según sea entero o decimal
       let numberValue = pos.value;
+      
+      // Formateo consistente para todos los valores
       if (Number.isInteger(min) && Number.isInteger(max)) {
+        // Para rangos enteros, mostrar todos los valores como enteros
         numberValue = Math.round(numberValue);
       } else {
-        // Para rangos decimales, limitar a 1 decimal
-        numberValue = parseFloat(numberValue.toFixed(1));
+        // Para rangos decimales, usar siempre 1 decimal
+        // Forzar el formato .0 incluso para enteros para consistencia visual
+        numberValue = numberValue.toFixed(1);
       }
       
-      // Ajustar la posición para mejor alineación
-      const radius = size / 2 + 18;
-      const x = Math.sin(radians) * radius;
-      const y = -Math.cos(radians) * radius;
+      // Calcular un radio uniforme para todos los indicadores
+      const baseRadius = size / 2 + 12;
       
-      // Ajuste adicional para mejorar la alineación del texto
+      // Usar un radio y offsets consistentes para todos los números
+      let radius = baseRadius;
       let offsetX = 0;
       let offsetY = 0;
       
       // Ajustes específicos según la posición
-      if (pos.angle === -135) {
-        offsetX = -7; // Ajustar el número de la izquierda
-        offsetY = -3;
-      } else if (pos.angle === 135) {
-        offsetX = 7; // Ajustar el número de la derecha
-        offsetY = -3;
-      } else if (pos.angle === 0) {
-        offsetY = -10; // Ajustar el número superior
+      if (pos.angle === -135) { // Izquierda (mínimo)
+        offsetX = -10;
+      } else if (pos.angle === 135) { // Derecha (máximo)
+        offsetX = 10;
+      } else if (pos.angle === 0) { // Arriba (medio)
+        offsetY = -10;
       }
+      
+      // Calcular la posición final con la misma distancia para todos
+      const x = Math.sin(radians) * radius;
+      const y = -Math.cos(radians) * radius;
       
       numbers.push(
         <div 
@@ -300,11 +303,25 @@ const VintageKnob = ({
     e.preventDefault();
     
     const delta = e.deltaY > 0 ? -1 : 1; // Invert direction to feel more natural
-    const step = (max - min) / 100 * delta * sensitivity;
-    const newValue = Math.max(min, Math.min(max, value + step));
+    
+    // Ajuste de sensibilidad para el control rotacional
+    // Un cambio pequeño en la rotación, similar a girar ligeramente la perilla
+    const rotationStep = 5 * delta * sensitivity; // 5 grados por paso de rueda
+    
+    // Calcular nueva rotación
+    const newRotation = Math.max(-135, Math.min(135, knobRotation + rotationStep));
+    
+    // Convertir rotación a valor
+    const newValue = getValueFromRotation(newRotation);
     
     if (newValue !== value) {
-      onChange(parseFloat(newValue.toFixed(2)));
+      // Redondear según el tipo de parámetro
+      const roundedValue = Number.isInteger(min) && Number.isInteger(max) ? 
+        Math.round(newValue) : 
+        parseFloat(newValue.toFixed(2));
+        
+      onChange(roundedValue);
+      setKnobRotation(newRotation);
     }
   };
 
@@ -371,11 +388,10 @@ const VintageKnob = ({
       {/* Help tooltip */}
       {hoverState && !disabled && (
         <div className="knob-tooltip">
-          <p>Drag up/down for precision</p>
-          <p>Hold ALT to rotate like real knob</p>
-          <p>Double-click to center</p>
-          <p>Use mouse wheel for fine tuning</p>
-          <p>Numbers show the value range</p>
+          <p>Gira la perilla con el mouse</p>
+          <p>Double-click para centrar</p>
+          <p>Use la rueda del mouse para ajuste fino</p>
+          <p>Los números muestran el rango de valores</p>
         </div>
       )}
     </div>
