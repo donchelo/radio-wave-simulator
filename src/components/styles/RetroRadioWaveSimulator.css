@@ -86,7 +86,7 @@
   margin: 10px 0;
 }
 
-/* Sección de perillas - Ahora como filas horizontales */
+/* Sección de perillas - Redistribuidas en filas horizontales */
 .knobs-section {
   width: 100%;
   background-color: #34241c;
@@ -97,22 +97,23 @@
   gap: 20px;
 }
 
-/* Filas de perillas - Organización horizontal */
+/* Filas de perillas - Distribución uniforme a lo ancho */
 .knobs-row {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-around;
-  gap: 15px;
+  justify-content: space-between;
+  width: 100%;
+  gap: 10px;
   margin-bottom: 15px;
 }
 
-/* Unidad de perilla individual */
+/* Unidad de perilla individual - Ajuste para distribución equitativa */
 .knob-unit {
   display: flex;
   flex-direction: column;
   align-items: center;
-  flex: 0 0 auto;
-  margin: 5px;
+  flex: 1 1 0;
+  min-width: 0;
+  margin: 0;
 }
 
 /* Botón de encendido y controles especiales */
@@ -175,14 +176,10 @@
   background-color: #ff3333;
 }
 
-/* Responsive */
+/* Responsive - Ajustado para mantener la distribución horizontal */
 @media (min-width: 768px) {
   .knobs-row {
-    justify-content: center;
-  }
-  
-  .knob-unit {
-    flex: 0 0 100px;
+    flex-wrap: nowrap;
   }
 }
 
@@ -191,12 +188,13 @@
     height: 200px;
   }
   
-  .knob-unit {
-    flex: 0 0 80px;
+  .knobs-row {
+    flex-wrap: wrap;
   }
   
-  .knobs-row {
-    gap: 10px;
+  .knob-unit {
+    flex: 1 1 40%;
+    margin-bottom: 15px;
   }
 }
 
@@ -206,7 +204,7 @@
   }
   
   .knob-unit {
-    flex: 0 0 70px;
+    flex: 1 1 45%;
   }
   
   .radio-title {
