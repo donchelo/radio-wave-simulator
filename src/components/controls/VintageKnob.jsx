@@ -227,6 +227,64 @@ const VintageKnob = ({
     return markers;
   };
 
+  // Generate number indicators like a clock
+  const renderNumberIndicators = () => {
+    const numbers = [];
+    // Mostrar solo 3 números clave para un diseño minimalista
+    const positions = [
+      { percentage: 0, value: min, angle: -135 },       // Valor mínimo
+      { percentage: 0.5, value: min + (max - min) / 2, angle: 0 },  // Valor medio
+      { percentage: 1, value: max, angle: 135 }         // Valor máximo
+    ];
+    
+    positions.forEach((pos, i) => {
+      const radians = (pos.angle * Math.PI) / 180;
+      
+      // Formatear el valor según sea entero o decimal
+      let numberValue = pos.value;
+      if (Number.isInteger(min) && Number.isInteger(max)) {
+        numberValue = Math.round(numberValue);
+      } else {
+        // Para rangos decimales, limitar a 1 decimal
+        numberValue = parseFloat(numberValue.toFixed(1));
+      }
+      
+      // Ajustar la posición para mejor alineación
+      const radius = size / 2 + 18;
+      const x = Math.sin(radians) * radius;
+      const y = -Math.cos(radians) * radius;
+      
+      // Ajuste adicional para mejorar la alineación del texto
+      let offsetX = 0;
+      let offsetY = 0;
+      
+      // Ajustes específicos según la posición
+      if (pos.angle === -135) {
+        offsetX = -7; // Ajustar el número de la izquierda
+        offsetY = -3;
+      } else if (pos.angle === 135) {
+        offsetX = 7; // Ajustar el número de la derecha
+        offsetY = -3;
+      } else if (pos.angle === 0) {
+        offsetY = -10; // Ajustar el número superior
+      }
+      
+      numbers.push(
+        <div 
+          key={i}
+          className="knob-number-indicator special"
+          style={{
+            transform: `translate(${x + offsetX}px, ${y + offsetY}px)`,
+          }}
+        >
+          {numberValue}
+        </div>
+      );
+    });
+    
+    return numbers;
+  };
+
   // Double-click to reset to middle value
   const handleDoubleClick = () => {
     if (disabled) return;
@@ -258,6 +316,7 @@ const VintageKnob = ({
         onMouseLeave={() => setHoverState(false)}
       >
         {renderMarkers()}
+        {renderNumberIndicators()}
         <div 
           ref={knobRef}
           className={`vintage-knob ${isDragging ? 'dragging' : ''} ${hoverState ? 'hover' : ''} ${disabled ? 'disabled' : ''}`}
@@ -316,6 +375,7 @@ const VintageKnob = ({
           <p>Hold ALT to rotate like real knob</p>
           <p>Double-click to center</p>
           <p>Use mouse wheel for fine tuning</p>
+          <p>Numbers show the value range</p>
         </div>
       )}
     </div>

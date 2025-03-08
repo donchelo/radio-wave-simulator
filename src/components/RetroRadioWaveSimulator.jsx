@@ -23,18 +23,16 @@ const RetroRadioWaveSimulator = () => {
     textWaveMode: false,
     textWaveData: [],
     displayTheme: 'green',
-    // Nuevos parámetros visuales
-    brightness: 100,    // 0-200% (100% es normal)
-    noise: 0,           // 0-100%
-    glitch: 0,          // 0-100%
-    speed: 1,           // 0.1-5x (1x es normal)
-    echo: 0,            // 0-100%
-    // Nuevos parámetros de color
-    colorSpread: 10,    // 0-30 spread between wave colors
-    glow: 0,            // 0-100% glow intensity
-    background: 0,      // 0-100% background darkness
-    afterglow: 0,       // 0-100% afterglow duration
-    colorMode: 'theme'  // 'theme', 'rainbow'
+    brightness: 100,
+    noise: 0,
+    glitch: 0,
+    speed: 1,
+    echo: 0,
+    colorSpread: 10,
+    glow: 0,
+    background: 0,
+    afterglow: 0,
+    colorMode: 'theme'
   });
   
   // Dimensiones responsive del SVG
@@ -75,7 +73,6 @@ const RetroRadioWaveSimulator = () => {
   
   // Cambiar tema con el cambio de hue
   useEffect(() => {
-    // Asignar tema basado en el rango de hue
     if (waveParams.colorMode === 'theme') {
       const { hue } = waveParams;
       let theme = waveParams.displayTheme;
@@ -109,10 +106,6 @@ const RetroRadioWaveSimulator = () => {
     updateParam('powerOn', powerOn);
   };
   
-  const handleWaveModeToggle = (value) => {
-    updateParam('textWaveMode', value === 1);
-  };
-  
   const handleTextWaveGenerated = (waveData) => {
     updateParam('textWaveData', waveData);
     
@@ -127,14 +120,11 @@ const RetroRadioWaveSimulator = () => {
     
     let waveHue = hue;
     if (colorMode === 'rainbow') {
-      // Rainbow mode: distribute colors evenly
       waveHue = (hue + (waveIndex * 30)) % 360;
     } else {
-      // Normal mode: use color spread
       waveHue = (hue + (waveIndex * (colorSpread || 10))) % 360;
     }
     
-    // Aplicar el parámetro de brillo (brightness) al valor de luminosidad
     const brightnessValue = brightness || 100;
     const luminosity = Math.min(90, 70 * (brightnessValue / 100));
     
@@ -142,46 +132,27 @@ const RetroRadioWaveSimulator = () => {
   };
   
   return (
-    <div className="radio-wave-simulator">
-      <div className={`vintage-radio-cabinet ${!waveParams.powerOn ? 'power-off' : ''}`}>
-        {/* Parte superior con rejilla, título y botón de encendido */}
-        <div className="radio-header">
-          <div className="radio-speaker-grill">
-            <div className="grill-lines"></div>
-            <h2 className="radio-title">WAVE SIMULATOR</h2>
-          </div>
-          
-          <div className="power-button-container">
-            <PowerKnob 
-              value={waveParams.powerOn ? 1 : 0} 
-              onChange={handlePowerToggle} 
-              size={80}
-              label="POWER"
-            />
-          </div>
-        </div>
-        
-        {/* Sección central con visualizador y perillas */}
-        <div className="radio-main-panel">
-          {/* Sección de visualización primero */}
-          <DisplaySection 
-            waveParams={waveParams}
-            svgRef={svgRef}
-            svgDimensions={svgDimensions}
-            updateParam={updateParam}
-            getBaseColor={getBaseColor}
-            handleWaveModeToggle={handleWaveModeToggle}
-            handleTextWaveGenerated={handleTextWaveGenerated}
-          />
-          
-          {/* Panel de control con perillas debajo */}
-          <ControlPanel 
-            waveParams={waveParams} 
-            updateParam={updateParam}
-            handlePowerToggle={handlePowerToggle}
+    <div className="retro-radio-simulator">
+      <div className="simulator-top-section">
+        <div className="left-panel">
+          <PowerKnob 
+            value={waveParams.powerOn ? 1 : 0}
+            onChange={handlePowerToggle}
           />
         </div>
+        <DisplaySection 
+          waveParams={waveParams}
+          svgRef={svgRef}
+          svgDimensions={svgDimensions}
+          getBaseColor={getBaseColor}
+          onTextWaveGenerated={handleTextWaveGenerated}
+        />
       </div>
+      
+      <ControlPanel 
+        waveParams={waveParams} 
+        updateParam={updateParam}
+      />
     </div>
   );
 };

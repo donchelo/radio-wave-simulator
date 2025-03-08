@@ -4,12 +4,13 @@
   align-items: center;
   justify-content: center;
   position: relative;
+  padding: 5px;
 }
 
 .knob-with-markers {
   position: relative;
-  height: 110px;
-  width: 110px;
+  height: 120px;
+  width: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -180,6 +181,34 @@
   width: 6px;
   height: 6px;
   box-shadow: 0 0 4px rgba(232, 227, 213, 0.5);
+}
+
+/* Number indicator styles */
+.knob-number-indicator {
+  position: absolute;
+  font-size: 0.65rem;
+  color: #e8e3d5;
+  left: 50%;
+  top: 50%;
+  z-index: 1;
+  text-align: center;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  font-weight: 500;
+  min-width: 14px;
+  min-height: 14px;
+  opacity: 0.6;
+  transform-origin: center center;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Style for special positions (min, middle, max) */
+.knob-number-indicator.special {
+  color: #ffcc00;
+  font-weight: 700;
+  font-size: 0.7rem;
+  opacity: 0.7;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
 }
 
 /* Tooltip with usage instructions */
